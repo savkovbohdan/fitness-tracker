@@ -4,8 +4,11 @@
 set -e
 cd /var/www/fitness-tracker
 
+echo "Installing system SQLite..."
+apt-get install -y sqlite3 libsqlite3-dev
+
 echo "Installing dependencies..."
-npm install --production --build-from-source
+npm install --production
 
 echo "Setting permissions..."
 chown -R www-data:www-data /var/www/fitness-tracker
