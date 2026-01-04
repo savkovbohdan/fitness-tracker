@@ -13,7 +13,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Deploy to Server
+    - name: Stop Application
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.SERVER_IP }}
@@ -23,12 +23,8 @@ jobs:
         script: |
           set -e
           cd /var/www/fitness-tracker
-          
-          echo "Stopping current app..."
           pm2 stop fitness-tracker || true
           pm2 delete fitness-tracker || true
-          
-          echo "Cleaning old files..."
           rm -rf * || true
 
     - name: Copy Files
@@ -52,45 +48,19 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
-          set -e
-          cd /var/www/fitness-tracker
-          
-          echo "Installing dependencies..."
-          npm install --production
-          
-          echo "Setting permissions..."
-          chown -R www-data:www-data /var/www/fitness-tracker
-          chmod -R 755 /var/www/fitness-tracker
-          
-          echo "Starting application..."
-          pm2 start server.js --name fitness-tracker
-          pm2 save
-          
-          echo "Configuring Nginx..."
-          cat > /etc/nginx/sites-available/fitness << 'EOF'
-server {
-    listen 80;
-    server_name _;
-    location / {
-        proxy_pass http://localhost:5001;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-EOF
-          
-          ln -sf /etc/nginx/sites-available/fitness /etc/nginx/sites-enabled/
-          rm -f /etc/nginx/sites-enabled/default
-          systemctl restart nginx
-          
-          echo "Deployment completed!"
-          echo "Application URL: http://$(curl -s ifconfig.me 2>/dev/null || echo '${{ secrets.SERVER_IP }}')"
+          chmod +x /var/www/fitness-tracker/.github/scripts/start-app.sh
+          /var/www/fitness-tracker/.github/scripts/start-app.sh
+
+    - name: Setup Nginx
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          chmod +x /var/www/fitness-tracker/.github/scripts/setup-nginx.sh
+          /var/www/fitness-tracker/.github/scripts/setup-nginx.sh
 
     - name: Health Check
       run: |
