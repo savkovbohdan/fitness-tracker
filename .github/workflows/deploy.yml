@@ -1,0 +1,113 @@
+name: 🚀 Deploy Fitness Tracker
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🚀 Deploy to Server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          set -e
+          
+          echo "📦 Updating system..."
+          sudo apt update && sudo apt upgrade -y
+          
+          echo "📦 Installing Node.js..."
+          curl -fsSL https://deb.nodesource.com/setup_18.x | sudo bash -
+          sudo apt-get install -y nodejs
+          
+          echo "📦 Installing PM2..."
+          sudo npm install -g pm2
+          
+          echo "📁 Creating app directory..."
+          sudo mkdir -p /var/www/fitness-tracker
+          cd /var/www/fitness-tracker
+          
+          echo "🛑 Stopping current app..."
+          sudo pm2 stop fitness-tracker || true
+          sudo pm2 delete fitness-tracker || true
+          
+          echo "🧹 Cleaning old files..."
+          sudo rm -rf * || true
+          
+          echo "📦 Copying new files..."
+          # Здесь будут скопированы файлы через scp
+          
+          echo "🔧 Setting permissions..."
+          sudo chown -R www-data:www-data /var/www/fitness-tracker
+          sudo chmod -R 755 /var/www/fitness-tracker
+          
+          echo "🌐 Configuring Nginx..."
+          sudo apt install -y nginx || true
+          
+          echo "🔥 Configuring firewall..."
+          sudo ufw allow 5001/tcp || true
+          sudo ufw allow 22/tcp || true
+          sudo ufw --force enable || true
+          
+          echo "🚀 Starting application..."
+          sudo pm2 start server.js --name fitness-tracker
+          sudo pm2 startup
+          sudo pm2 save
+          
+          echo "🎉 Deployment completed!"
+          echo "🌐 Application URL: http://$(curl -s ifconfig.me 2>/dev/null || echo '${{ secrets.SERVER_IP }}')"
+
+    - name: 📦 Copy Files
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        source: "."
+        target: "/var/www/fitness-tracker"
+        strip_components: 1
+        overwrite: true
+
+    - name: 🌐 Configure Nginx
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          sudo cat > /etc/nginx/sites-available/fitness << 'EOF'
+server {
+    listen 80;
+    server_name _;
+    location / {
+        proxy_pass http://localhost:5001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+    }
+}
+EOF
+          
+          sudo ln -sf /etc/nginx/sites-available/fitness /etc/nginx/sites-enabled/
+          sudo rm -f /etc/nginx/sites-enabled/default
+          sudo systemctl restart nginx
+          sudo systemctl enable nginx
+
+    - name: ✅ Health Check
+      run: |
+        sleep 30
+        curl -f http://${{ secrets.SERVER_IP }}/api/health || exit 1
