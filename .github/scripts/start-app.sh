@@ -5,7 +5,7 @@ set -e
 cd /var/www/fitness-tracker
 
 echo "Installing dependencies..."
-npm install --production
+npm install --production --build-from-source
 
 echo "Setting permissions..."
 chown -R www-data:www-data /var/www/fitness-tracker
@@ -23,13 +23,13 @@ echo "Starting application..."
 pm2 start server.js --name fitness-tracker
 
 # Wait for app to start
-sleep 10
+sleep 15
 
 echo "Checking app status..."
 pm2 status fitness-tracker
 
 echo "Checking PM2 logs..."
-pm2 logs fitness-tracker --lines 20
+pm2 logs fitness-tracker --lines 10
 
 echo "Testing local API..."
 curl -f http://localhost:5001/api/health || echo "Local API failed"
