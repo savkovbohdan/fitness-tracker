@@ -1,4 +1,4 @@
-name: 🚀 Deploy Fitness Tracker
+name: Deploy Fitness Tracker
 
 on:
   push:
@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: 📥 Checkout code
+    - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: 📦 Deploy to Server
+    - name: Deploy to Server
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.SERVER_IP }}
@@ -24,14 +24,14 @@ jobs:
           set -e
           cd /var/www/fitness-tracker
           
-          echo "🛑 Stopping current app..."
+          echo "Stopping current app..."
           pm2 stop fitness-tracker || true
           pm2 delete fitness-tracker || true
           
-          echo "🧹 Cleaning old files..."
+          echo "Cleaning old files..."
           rm -rf * || true
 
-    - name: 📦 Copy Files
+    - name: Copy Files
       uses: appleboy/scp-action@master
       with:
         host: ${{ secrets.SERVER_IP }}
@@ -44,7 +44,7 @@ jobs:
         overwrite: true
         exclude: ".git,node_modules"
 
-    - name: 🚀 Start Application
+    - name: Start Application
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.SERVER_IP }}
@@ -55,18 +55,18 @@ jobs:
           set -e
           cd /var/www/fitness-tracker
           
-          echo "📦 Installing dependencies..."
+          echo "Installing dependencies..."
           npm install --production
           
-          echo "🔧 Setting permissions..."
+          echo "Setting permissions..."
           chown -R www-data:www-data /var/www/fitness-tracker
           chmod -R 755 /var/www/fitness-tracker
           
-          echo "🚀 Starting application..."
+          echo "Starting application..."
           pm2 start server.js --name fitness-tracker
           pm2 save
           
-          echo "🌐 Configuring Nginx..."
+          echo "Configuring Nginx..."
           cat > /etc/nginx/sites-available/fitness << 'EOF'
 server {
     listen 80;
@@ -89,10 +89,10 @@ EOF
           rm -f /etc/nginx/sites-enabled/default
           systemctl restart nginx
           
-          echo "🎉 Deployment completed!"
-          echo "🌐 Application URL: http://$(curl -s ifconfig.me 2>/dev/null || echo '${{ secrets.SERVER_IP }}')"
+          echo "Deployment completed!"
+          echo "Application URL: http://$(curl -s ifconfig.me 2>/dev/null || echo '${{ secrets.SERVER_IP }}')"
 
-    - name: ✅ Health Check
+    - name: Health Check
       run: |
         sleep 30
         curl -f http://${{ secrets.SERVER_IP }}/api/health || exit 1
