@@ -63,6 +63,21 @@ jobs:
           /var/www/fitness-tracker/.github/scripts/setup-nginx.sh
 
     - name: Health Check
-      run: |
-        sleep 30
-        curl -f http://${{ secrets.SERVER_IP }}/api/health || exit 1
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          echo "Waiting for application to start..."
+          sleep 30
+          
+          echo "Testing local API..."
+          curl -f http://localhost:5001/api/health || echo "Local API failed"
+          
+          echo "Testing external API..."
+          curl -f http://178.212.12.73/api/health || echo "External API failed"
+          
+          echo "PM2 status:"
+          pm2 status

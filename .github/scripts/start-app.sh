@@ -13,6 +13,16 @@ chmod -R 755 /var/www/fitness-tracker
 
 echo "Starting application..."
 pm2 start server.js --name fitness-tracker
+
+# Wait for app to start
+sleep 10
+
+echo "Checking app status..."
+pm2 status fitness-tracker
+
+echo "Testing local API..."
+curl -f http://localhost:5001/api/health || echo "Local API failed"
+
 pm2 save
 
 echo "Deployment completed!"
