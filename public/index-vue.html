@@ -12,7 +12,7 @@
     <div id="app"></div>
 
     <script>
-        const { createApp, ref, onMounted } = Vue;
+        const { createApp, ref, onMounted, computed } = Vue;
 
         // ExerciseIcon Component
         const ExerciseIcon = {
@@ -29,8 +29,8 @@
                 },
                 iconStyle() {
                     return {
-                        width: this.size + 'px',
-                        height: this.size + 'px'
+                        width: `${this.size}px`,
+                        height: `${this.size}px`
                     };
                 }
             },
@@ -76,7 +76,7 @@
         // ExercisesScreen Component
         const ExercisesScreen = {
             components: { ExerciseIcon },
-            emits: ['change-screen', 'select-exercise', 'show-error', 'show-success', 'refresh-exercises'],
+            emits: ['change-screen'],
             props: {
                 exercises: Array,
                 loading: Boolean
@@ -118,7 +118,7 @@
                     this.addingExercise = true;
                     try {
                         await axios.post('/api/exercises', this.newExercise);
-                        this.$emit('show-success', 'Упражнение "' + this.newExercise.name + '" добавлено!');
+                        this.$emit('show-success', \`Упражнение "\${this.newExercise.name}" добавлено!\`);
                         this.$emit('refresh-exercises');
                         
                         setTimeout(() => {
@@ -262,7 +262,7 @@
                     }
                 },
                 finishWorkout() {
-                    this.$emit('show-success', 'Тренировка завершена! Сохранено подходов: ' + this.savedSets.length);
+                    this.$emit('show-success', \`Тренировка завершена! Сохранено подходов: \${this.savedSets.length}\`);
                     setTimeout(() => {
                         this.$emit('change-screen', 'main');
                     }, 2000);
