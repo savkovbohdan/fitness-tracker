@@ -24,6 +24,10 @@ TELEGRAM_BOT_TOKEN=8386581272:AAEL5k6Kxx1ZDN2jeoONNRbe1NKdPwEZe8M
 WEBAPP_URL=http://178.212.12.73
 EOF
 
+echo "Setting up Python environment..."
+export TELEGRAM_BOT_TOKEN=8386581272:AAEL5k6Kxx1ZDN2jeoONNRbe1NKdPwEZe8M
+export WEBAPP_URL=http://178.212.12.73
+
 echo "Setting up PostgreSQL database..."
 sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres123';" || echo "Password already set"
 sudo -u postgres psql -c "CREATE DATABASE fitness_tracker;" || echo "Database already exists"
@@ -46,7 +50,7 @@ sleep 10
 echo "Starting Python Mini App Bot..."
 pm2 stop mini-app-bot || echo "Python bot not running"
 pm2 delete mini-app-bot || echo "Python bot not found"
-pm2 start mini_app_bot.py --name mini-app-bot --interpreter python3
+pm2 start mini_app_bot.py --name mini-app-bot --interpreter python3 --env TELEGRAM_BOT_TOKEN=8386581272:AAEL5k6Kxx1ZDN2jeoONNRbe1NKdPwEZe8M --env WEBAPP_URL=http://178.212.12.73
 
 # Wait for python bot to start
 sleep 5
