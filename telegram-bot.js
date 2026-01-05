@@ -1,14 +1,29 @@
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
 
-// Замени на свой токен
-const BOT_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN';
-const WEBAPP_URL = 'http://178.212.12.73';
+// Используем переменные окружения
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8386581272:AAEL5k6Kxx1ZDN2jeoONNRbe1NKdPwEZe8M';
+const WEBAPP_URL = process.env.WEBAPP_URL || 'http://178.212.12.73';
+
+console.log('🤖 Starting Telegram Bot...');
+console.log('🌐 Web App URL:', WEBAPP_URL);
+console.log('🔑 Bot Token:', BOT_TOKEN.substring(0, 15) + '...');
 
 const bot = new TelegramBot(BOT_TOKEN);
 
+// Проверка подключения к Telegram API
+bot.getMe()
+  .then((botInfo) => {
+    console.log('✅ Bot connected successfully:', botInfo.username);
+  })
+  .catch((error) => {
+    console.error('❌ Bot connection failed:', error.message);
+    process.exit(1);
+  });
+
 // Команды бота
 bot.onText(/\/start/, async (msg) => {
+  console.log('📨 Received /start command from:', msg.chat.id);
   const chatId = msg.chat.id;
   const firstName = msg.from.first_name;
   
@@ -27,23 +42,29 @@ bot.onText(/\/start/, async (msg) => {
 Нажми /app чтобы открыть приложение!
   `;
   
-  await bot.sendMessage(chatId, welcomeMessage, {
-    reply_markup: {
-      inline_keyboard: [
-        [
-          { text: '📱 Открыть приложение', web_app: { url: WEBAPP_URL } },
-          { text: '📊 Моя статистика', callback_data: 'stats' }
-        ],
-        [
-          { text: '📜 История тренировок', callback_data: 'history' },
-          { text: '💪 Упражнения', callback_data: 'exercises' }
-        ],
-        [
-          { text: 'ℹ️ Помощь', callback_data: 'help' }
+  try {
+    await bot.sendMessage(chatId, welcomeMessage, {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: '📱 Открыть приложение', web_app: { url: WEBAPP_URL } },
+            { text: '📊 Моя статистика', callback_data: 'stats' }
+          ],
+          [
+            { text: '📜 История тренировок', callback_data: 'history' },
+            { text: '💪 Упражнения', callback_data: 'exercises' }
+          ],
+          [
+            { text: 'ℹ️ Помощь', callback_data: 'help' }
+          ]
         ]
-      ]
-    }
-  });
+      }
+    });
+    console.log('✅ /start command sent successfully to:', chatId);
+  } catch (error) {
+    console.error('❌ Error sending /start message:', error.message);
+  }
 });
 
 bot.onText(/\/app/, async (msg) => {
