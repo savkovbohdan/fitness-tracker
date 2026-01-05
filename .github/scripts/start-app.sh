@@ -41,10 +41,15 @@ pm2 start server.js --name fitness-tracker
 sleep 10
 
 echo "Starting Telegram Bot..."
-pm2 start telegram-bot.js --name telegram-bot || echo "Bot already running"
+pm2 stop telegram-bot || echo "Bot not running"
+pm2 delete telegram-bot || echo "Bot not found"
+pm2 start telegram-bot.js --name telegram-bot
 
 # Wait for bot to start
 sleep 5
+
+echo "Checking bot status..."
+pm2 status telegram-bot
 
 echo "Force database initialization..."
 curl -X POST http://localhost:5001/api/init-db || echo "DB init failed"
