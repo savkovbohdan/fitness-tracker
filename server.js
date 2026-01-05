@@ -83,7 +83,11 @@ async function initializeDatabase() {
 }
 
 // Initialize database on startup
-initializeDatabase();
+initializeDatabase().then(() => {
+  console.log('Database initialization completed');
+}).catch(err => {
+  console.error('Database initialization failed:', err);
+});
 
 app.get('/api/health', (req, res) => {
   res.json({status: 'ok', message: '🏋️‍♂️ Фитнес-Трекер работает!'});
