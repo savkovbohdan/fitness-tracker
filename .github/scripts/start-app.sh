@@ -77,7 +77,7 @@ kill $PYTHON_PID 2>/dev/null || echo "Python process already stopped"
 echo "Starting Python Mini App Bot..."
 pm2 stop mini-app-bot || echo "Python bot not running"
 pm2 delete mini-app-bot || echo "Python bot not found"
-pm2 start mini_app_bot_webapp.py --name mini-app-bot --interpreter /usr/bin/python3 --env TELEGRAM_BOT_TOKEN=8386581272:AAEL5k6Kxx1ZDN2jeoONNRbe1NKdPwEZe8M --env WEBAPP_URL=http://178.212.12.73
+pm2 start mini_app_bot_working.py --name mini-app-bot --interpreter /usr/bin/python3 --env TELEGRAM_BOT_TOKEN=8386581272:AAEL5k6Kxx1ZDN2jeoONNRbe1NKdPwEZe8M --env WEBAPP_URL=http://178.212.12.73
 
 # Wait for python bot to start
 sleep 5
