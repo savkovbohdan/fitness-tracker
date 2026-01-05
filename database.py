@@ -1,4 +1,4 @@
-import sqlite3
+import psycopg2
 import os
 from datetime import datetime
 import uuid
@@ -10,7 +10,12 @@ class Database:
     
     def init_db(self):
         """Инициализация базы данных"""
-        conn = sqlite3.connect(self.db_path)
+        conn = psycopg2.connect(
+            host="localhost",
+            database="fitness_tracker",
+            user="postgres",
+            password="postgres123"
+        )
         cursor = conn.cursor()
         
         # Таблица пользователей
@@ -76,7 +81,12 @@ class Database:
     
     def get_connection(self):
         """Получить соединение с базой данных"""
-        return sqlite3.connect(self.db_path)
+        return psycopg2.connect(
+            host="localhost",
+            database="fitness_tracker",
+            user="postgres",
+            password="postgres123"
+        )
     
     def add_user(self, telegram_id, username=None, first_name=None):
         """Добавить нового пользователя"""
@@ -89,9 +99,9 @@ class Database:
             )
             conn.commit()
             return cursor.lastrowid
-        except sqlite3.IntegrityError:
+        except psycopg2.IntegrityError:
             # Пользователь уже существует
-            cursor.execute('SELECT id FROM users WHERE telegram_id = ?', (telegram_id,))
+            cursor.execute('SELECT id FROM users WHERE telegram_id = %s', (telegram_id,))
             return cursor.fetchone()[0]
         finally:
             conn.close()
@@ -116,7 +126,7 @@ class Database:
             )
             conn.commit()
             return cursor.lastrowid
-        except sqlite3.IntegrityError:
+        except psycopg2.IntegrityError:
             return None  # Упражнение с таким названием уже существует
         finally:
             conn.close()

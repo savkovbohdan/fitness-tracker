@@ -28,7 +28,7 @@ cat > package.json << 'EOF'
   },
   "dependencies": {
     "express": "^4.18.2",
-    "sqlite3": "^5.1.6",
+    "pg": "^8.11.3",
     "cors": "^2.8.5",
     "body-parser": "^1.20.2"
   }
@@ -38,7 +38,7 @@ EOF
 # Создание server.js
 cat > server.js << 'EOF'
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const { Pool } = require('pg');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
