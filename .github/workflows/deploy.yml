@@ -13,6 +13,18 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build Vue.js frontend
+      run: npm run build
+
     - name: Stop Application
       uses: appleboy/ssh-action@master
       with:
@@ -28,18 +40,52 @@ jobs:
           pm2 delete fitness-tracker || echo "No process to delete"
           rm -rf * .* || true
 
-    - name: Copy Files
+    - name: Copy Backend Files
       uses: appleboy/scp-action@master
       with:
         host: ${{ secrets.SERVER_IP }}
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
-        source: "."
+        source: "server.js,database.js,mini_app_bot_webapp.py,.env.example,package.json"
         target: "/var/www/fitness-tracker"
         strip_components: 0
         overwrite: true
-        exclude: ".git,node_modules"
+
+    - name: Copy Built Frontend
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        source: "dist/*"
+        target: "/var/www/fitness-tracker/public"
+        strip_components: 1
+        overwrite: true
+
+    - name: Copy Exercise Photos
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        source: "exercise_photos/*"
+        target: "/var/www/fitness-tracker/exercise_photos"
+        strip_components: 0
+        overwrite: true
+
+    - name: Install Dependencies
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          cd /var/www/fitness-tracker
+          npm ci --production
 
     - name: Start Application
       uses: appleboy/ssh-action@master
@@ -49,8 +95,9 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
-          chmod +x /var/www/fitness-tracker/.github/scripts/start-app.sh
-          /var/www/fitness-tracker/.github/scripts/start-app.sh
+          cd /var/www/fitness-tracker
+          chmod +x .github/scripts/start-app.sh
+          .github/scripts/start-app.sh
 
     - name: Setup Nginx
       uses: appleboy/ssh-action@master
