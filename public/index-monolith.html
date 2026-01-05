@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💪 Фитнес-Трекер</title>
+    <link rel="stylesheet" href="styles/ultra-modern.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+        const { createApp, ref, onMounted } = Vue;
+
+        // ExerciseIcon Component
+        const ExerciseIcon = {
+            props: {
+                photoUrl: String,
+                size: {
+                    type: Number,
+                    default: 48
+                }
+            },
+            computed: {
+                iconClass() {
+                    return this.photoUrl ? 'exercise-icon photo' : 'exercise-icon placeholder';
+                },
+                iconStyle() {
+                    return {
+                        width: this.size + 'px',
+                        height: this.size + 'px'
+                    };
+                }
+            },
+            template: `
+                <div :class="iconClass" :style="iconStyle">
+                    <img v-if="photoUrl" :src="photoUrl" alt="Exercise" 
+                         style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" />
+                    <span v-else>💪</span>
+                </div>
+            `
+        };
+
+        // MainScreen Component
+        const MainScreen = {
+            emits: ['change-screen'],
+            props: {
+                error: String,
+                success: String
+            },
+            template: `
+                <div class="container">
+                    <div class="header">
+                        <h1>💪 Фитнес-Трекер</h1>
+                        <p>Отслеживай свои тренировки</p>
+                    </div>
+                    
+                    <div v-if="error" class="error">{{ error }}</div>
+                    <div v-if="success" class="success">{{ success }}</div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">12</div>
+                            <div class="stat-label">Тренировок</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">248</div>
+                            <div class="stat-label">Подходов</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">1.8K</div>
+                            <div class="stat-label">Повторений</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">8</div>
+                            <div class="stat-label">Дней</div>
+                        </div>
+                    </div>
+                    
+                    <div class="nav-tabs">
+                        <button class="nav-tab active" @click="$emit('change-screen', 'exercises')">
+                            💪 Тренировки
+                        </button>
+                        <button class="nav-tab" @click="$emit('change-screen', 'history')">
+                            📊 История
+                        </button>
+                        <button class="nav-tab" @click="$emit('change-screen', 'stats')">
+                            📈 Статистика
+                        </button>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 style="margin-bottom: 20px; color: #1a202c; font-size: 20px; font-weight: 700;">
+                            Быстрые действия
+                        </h3>
+                        <button class="button pulse" @click="$emit('change-screen', 'exercises')">
+                            🚀 Начать тренировку
+                        </button>
+                        <button class="button secondary" @click="$emit('change-screen', 'exercises')">
+                            ➕ Добавить упражнение
+                        </button>
+                    </div>
+                </div>
+            `
+        };
+
+        // ExercisesScreen Component
+        const ExercisesScreen = {
+            components: { ExerciseIcon },
+            emits: ['change-screen', 'select-exercise', 'show-error', 'show-success', 'refresh-exercises'],
+            props: {
+                exercises: Array,
+                loading: Boolean
+            },
+            data() {
+                return {
+                    showAddForm: false,
+                    newExercise: { name: '', category: 'грудь', photo_url: '' },
+                    addingExercise: false,
+                    uploadingPhoto: false
+                };
+            },
+            methods: {
+                async uploadPhoto(file) {
+                    if (!file) return;
+                    
+                    this.uploadingPhoto = true;
+                    const formData = new FormData();
+                    formData.append('photo', file);
+
+                    try {
+                        const response = await axios.post('/api/upload-exercise-photo', formData, {
+                            headers: { 'Content-Type': 'multipart/form-data' }
+                        });
+                        this.newExercise.photo_url = response.data.photo_url;
+                        this.$emit('show-success', 'Фото загружено!');
+                    } catch (err) {
+                        this.$emit('show-error', 'Ошибка при загрузке фото: ' + (err.response?.data?.error || err.message));
+                    } finally {
+                        this.uploadingPhoto = false;
+                    }
+                },
+                async addExercise() {
+                    if (!this.newExercise.name.trim()) {
+                        this.$emit('show-error', 'Название упражнения обязательно');
+                        return;
+                    }
+
+                    this.addingExercise = true;
+                    try {
+                        await axios.post('/api/exercises', this.newExercise);
+                        this.$emit('show-success', 'Упражнение "' + this.newExercise.name + '" добавлено!');
+                        this.$emit('refresh-exercises');
+                        
+                        setTimeout(() => {
+                            this.showAddForm = false;
+                            this.newExercise = { name: '', category: 'грудь', photo_url: '' };
+                        }, 2000);
+                    } catch (err) {
+                        this.$emit('show-error', err.response?.data?.error || 'Ошибка при добавлении упражнения');
+                    } finally {
+                        this.addingExercise = false;
+                    }
+                },
+                selectExercise(exercise) {
+                    this.$emit('select-exercise', exercise);
+                }
+            },
+            template: `
+                <div class="container">
+                    <div class="header">
+                        <h1>💪 Упражнения</h1>
+                        <p>Выбери упражнение для тренировки</p>
+                    </div>
+                    
+                    <div class="nav-tabs">
+                        <button class="nav-tab active" @click="$emit('change-screen', 'exercises')">
+                            💪 Упражнения
+                        </button>
+                        <button class="nav-tab" @click="$emit('change-screen', 'history')">
+                            📊 История
+                        </button>
+                        <button class="nav-tab" @click="$emit('change-screen', 'stats')">
+                            📈 Статистика
+                        </button>
+                    </div>
+                    
+                    <button class="button glow" @click="showAddForm = true" style="margin-bottom: 24px;">
+                        ➕ Добавить новое упражнение
+                    </button>
+                    
+                    <div v-if="showAddForm" class="form-section">
+                        <h3 style="margin-bottom: 20px; color: white; font-size: 20px; font-weight: 700;">
+                            Новое упражнение
+                        </h3>
+                        <div class="form-group">
+                            <label class="form-label">Название упражнения</label>
+                            <input v-model="newExercise.name" placeholder="Например: Жим лежа" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Категория</label>
+                            <select v-model="newExercise.category">
+                                <option value="грудь">💪 Грудь</option>
+                                <option value="ноги">🦵 Ноги</option>
+                                <option value="спина">🔙 Спина</option>
+                                <option value="плечи">🤸 Плечи</option>
+                                <option value="руки">💪 Руки</option>
+                                <option value="пресс">🎯 Пресс</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Фото упражнения</label>
+                            <input type="file" @change="uploadPhoto($event.target.files[0])" 
+                                   accept="image/*" style="display: none;" ref="fileInput" />
+                            <button class="button secondary" @click="$refs.fileInput.click()" 
+                                    :disabled="uploadingPhoto" style="width: 100%;">
+                                {{ uploadingPhoto ? '📸 Загрузка...' : '📷 Выбрать фото' }}
+                            </button>
+                        </div>
+                        
+                        <div v-if="newExercise.photo_url" style="margin-bottom: 20px; text-align: center;">
+                            <img :src="newExercise.photo_url" alt="Preview"
+                                 style="width: 120px; height: 120px; object-fit: cover; 
+                                        border-radius: 16px; border: 3px solid #4299e1; box-shadow: 0 8px 20px rgba(0,0,0,0.2);" />
+                            <div style="font-size: 14px; color: white; margin-top: 8px; font-weight: 600;">
+                                ✅ Фото загружено
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px;">
+                            <button class="button" @click="addExercise" 
+                                    :disabled="addingExercise || uploadingPhoto">
+                                {{ addingExercise ? '⏳ Добавление...' : '✅ Добавить упражнение' }}
+                            </button>
+                            <button class="button secondary" @click="showAddForm = false">
+                                ❌ Отмена
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div v-if="loading" class="loading">🔄 Загрузка упражнений...</div>
+                    <div v-else class="card">
+                        <h3 style="margin-bottom: 24px; color: #1a202c; font-size: 20px; font-weight: 700;">
+                            Доступные упражнения ({{ exercises.length }})
+                        </h3>
+                        <div v-for="exercise in exercises" :key="exercise.id" class="exercise-item">
+                            <div class="exercise-content">
+                                <div class="exercise-photo">
+                                    <img v-if="exercise.photo_url" :src="exercise.photo_url" :alt="exercise.name"
+                                         @error="$event.target.style.display = 'none'" />
+                                    <div v-else style="width: 100%; height: 100%; display: flex; 
+                                               align-items: center; justify-content: center; 
+                                               background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); 
+                                               border-radius: 16px; font-size: 36px; color: white;">
+                                        💪
+                                    </div>
+                                </div>
+                                <div class="exercise-info">
+                                    <div class="exercise-name">{{ exercise.name }}</div>
+                                    <span class="category">{{ exercise.category }}</span>
+                                </div>
+                            </div>
+                            <button class="button secondary" @click="selectExercise(exercise)">
+                                Выбрать →
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button class="button secondary" @click="$emit('change-screen', 'main')" style="margin-top: 20px;">
+                        ← Назад
+                    </button>
+                </div>
+            `
+        };
+
+        // WorkoutScreen Component
+        const WorkoutScreen = {
+            components: { ExerciseIcon },
+            emits: ['change-screen', 'show-success', 'show-error'],
+            props: {
+                selectedExercise: Object
+            },
+            data() {
+                return {
+                    savedSets: [],
+                    weight: '',
+                    reps: '',
+                    useBodyweight: false
+                };
+            },
+            methods: {
+                async addSet() {
+                    if (!this.reps.trim()) {
+                        this.$emit('show-error', 'Введите количество повторений');
+                        return;
+                    }
+
+                    if (!this.useBodyweight && !this.weight.trim()) {
+                        this.$emit('show-error', 'Введите вес или выберите "Собственный вес"');
+                        return;
+                    }
+
+                    try {
+                        const response = await axios.post('/api/workout-sets', {
+                            exercise_id: this.selectedExercise.id,
+                            reps: parseInt(this.reps),
+                            weight: this.useBodyweight ? 'Собственный вес' : parseFloat(this.weight)
+                        });
+
+                        this.savedSets.push(response.data);
+                        this.$emit('show-success', 'Подход добавлен!');
+                        this.reps = '';
+                        this.weight = '';
+                        
+                        setTimeout(() => this.$emit('show-success', ''), 2000);
+                    } catch (err) {
+                        this.$emit('show-error', err.response?.data?.error || 'Ошибка при сохранении подхода');
+                    }
+                },
+                finishWorkout() {
+                    this.$emit('show-success', 'Тренировка завершена! Сохранено подходов: ' + this.savedSets.length);
+                    setTimeout(() => {
+                        this.$emit('change-screen', 'main');
+                    }, 2000);
+                }
+            },
+            template: `
+                <div class="container">
+                    <div class="header">
+                        <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                            <ExerciseIcon :photoUrl="selectedExercise.photo_url" :size="60" 
+                                         style="border: 2px solid #e5e7eb;" />
+                            <div>
+                                <h1 style="margin: 0;">💪 Тренировка</h1>
+                                <p style="margin: 4px 0 0 0; font-size: 18px; font-weight: bold;">
+                                    {{ selectedExercise.name }}
+                                </p>
+                                <span class="category">{{ selectedExercise.category }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div v-if="savedSets.length > 0" class="card">
+                        <h3>Сохраненные подходы ({{ savedSets.length }}):</h3>
+                        <div v-for="set in savedSets" :key="set.id" 
+                             style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                            <strong>Подход {{ set.set_number }}:</strong> 
+                            {{ set.reps }} повторений, {{ set.weight }} 
+                            {{ set.weight === 'Собственный вес' ? '' : 'кг' }}
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Добавить подход:</h3>
+                        <div style="margin: 16px 0;">
+                            <div style="margin: 12px 0;">
+                                <label style="display: flex; align-items: center; cursor: pointer;">
+                                    <input type="checkbox" v-model="useBodyweight" style="margin-right: 8px;" />
+                                    Собственный вес
+                                </label>
+                            </div>
+                            
+                            <input v-if="!useBodyweight" type="number" placeholder="Вес (кг)" 
+                                   v-model="weight" style="margin-bottom: 12px;" />
+                            <input type="number" placeholder="Количество повторений" v-model="reps" />
+                        </div>
+                        
+                        <div style="display: flex; gap: 8px;">
+                            <button class="button" @click="addSet" style="flex: 1;">
+                                ➕ Добавить подход
+                            </button>
+                            <button class="button danger" @click="finishWorkout" style="flex: 1;">
+                                ✅ Завершить тренировку
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `
+        };
+
+        // HistoryScreen Component
+        const HistoryScreen = {
+            components: { ExerciseIcon },
+            emits: ['change-screen'],
+            data() {
+                return {
+                    workoutHistory: [],
+                    loading: false
+                };
+            },
+            methods: {
+                async loadWorkoutHistory() {
+                    this.loading = true;
+                    try {
+                        const response = await axios.get('/api/workout-logs/1');
+                        this.workoutHistory = response.data;
+                    } catch (err) {
+                        console.error('Error loading workout history:', err);
+                        this.workoutHistory = [];
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            },
+            mounted() {
+                this.loadWorkoutHistory();
+            },
+            template: `
+                <div class="container">
+                    <div class="header">
+                        <h1>📊 История</h1>
+                        <p>Твои прошлые тренировки</p>
+                    </div>
+                    
+                    <div v-if="loading" class="loading">Загрузка истории...</div>
+                    <div v-else-if="workoutHistory.length === 0" class="card">
+                        <div class="loading">История тренировок пуста</div>
+                    </div>
+                    <div v-else>
+                        <div v-for="day in workoutHistory" :key="day.date" class="workout-day">
+                            <div class="workout-day-header">
+                                <h3 class="workout-day-title">
+                                    {{ new Date(day.date).toLocaleDateString('ru-RU', { 
+                                        day: 'numeric', month: 'long', year: 'numeric' 
+                                    }) }}
+                                </h3>
+                                <div class="workout-day-stats">
+                                    {{ day.totalSets }} подходов, {{ day.totalReps }} повторений
+                                </div>
+                            </div>
+                            <div v-for="exercise in day.exercises" :key="exercise.name" class="exercise-in-history">
+                                <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                                    <ExerciseIcon :photoUrl="exercise.photo_url" :size="40" />
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-weight: bold; font-size: 16px; margin-bottom: 4px;">
+                                            {{ exercise.name }}
+                                        </div>
+                                        <div style="font-size: 12px; color: #718096;">
+                                            <span class="category">{{ exercise.category }}</span>
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right; margin-left: 12px; flex-shrink: 0;">
+                                        <div style="font-size: 14px; font-weight: bold; color: #667eea;">
+                                            {{ exercise.maxWeight }}
+                                        </div>
+                                        <div style="font-size: 12px; color: #718096;">
+                                            {{ exercise.totalSets }}×{{ exercise.totalReps }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 12px; color: #718096; margin-bottom: 4px; padding-left: 56px;">
+                                    Подходы: {{ exercise.setsDetail }}
+                                </div>
+                                <div style="font-size: 11px; color: #a0aec0; padding-left: 56px;">
+                                    Последний подход: {{ new Date(exercise.lastSetTime).toLocaleTimeString('ru-RU', {
+                                        hour: '2-digit', minute: '2-digit'
+                                    }) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="button" @click="$emit('change-screen', 'main')">← Назад</button>
+                </div>
+            `
+        };
+
+        // StatsScreen Component
+        const StatsScreen = {
+            emits: ['change-screen'],
+            template: `
+                <div class="container">
+                    <div class="header">
+                        <h1>📈 Статистика</h1>
+                        <p>Твои достижения</p>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>🏋️‍♂️ Общая статистика</h3>
+                        <div style="padding: 16px 0;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                                <span>Всего тренировок:</span>
+                                <strong>12</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                                <span>Всего подходов:</span>
+                                <strong>248</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                                <span>Всего повторений:</span>
+                                <strong>1,856</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Активных дней:</span>
+                                <strong>8</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="button" @click="$emit('change-screen', 'main')">← Назад</button>
+                </div>
+            `
+        };
+
+        // Main App
+        const App = {
+            components: {
+                MainScreen,
+                ExercisesScreen,
+                WorkoutScreen,
+                HistoryScreen,
+                StatsScreen
+            },
+            data() {
+                return {
+                    currentScreen: 'main',
+                    exercises: [],
+                    selectedExercise: null,
+                    loading: false,
+                    error: null,
+                    success: null
+                };
+            },
+            methods: {
+                async loadExercises() {
+                    this.loading = true;
+                    try {
+                        const response = await axios.get('/api/exercises');
+                        this.exercises = response.data;
+                    } catch (err) {
+                        this.error = 'Ошибка загрузки упражнений';
+                        console.error('Error loading exercises:', err);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                changeScreen(screen) {
+                    this.currentScreen = screen;
+                    this.error = null;
+                    this.success = null;
+                },
+                selectExercise(exercise) {
+                    this.selectedExercise = exercise;
+                    this.currentScreen = 'workout';
+                },
+                showError(message) {
+                    this.error = message;
+                    setTimeout(() => this.error = null, 3000);
+                },
+                showSuccess(message) {
+                    this.success = message;
+                    setTimeout(() => this.success = null, 2000);
+                }
+            },
+            mounted() {
+                this.loadExercises();
+            },
+            template: `
+                <div class="fade-in">
+                    <MainScreen v-if="currentScreen === 'main'" 
+                               @change-screen="changeScreen"
+                               :error="error" :success="success" />
+                    
+                    <ExercisesScreen v-else-if="currentScreen === 'exercises'"
+                                   @change-screen="changeScreen"
+                                   @select-exercise="selectExercise"
+                                   @show-error="showError"
+                                   @show-success="showSuccess"
+                                   @refresh-exercises="loadExercises"
+                                   :exercises="exercises" :loading="loading" />
+                    
+                    <WorkoutScreen v-else-if="currentScreen === 'workout' && selectedExercise"
+                                  @change-screen="changeScreen"
+                                  @show-error="showError"
+                                  @show-success="showSuccess"
+                                  :selected-exercise="selectedExercise" />
+                    
+                    <HistoryScreen v-else-if="currentScreen === 'history'"
+                                  @change-screen="changeScreen" />
+                    
+                    <StatsScreen v-else-if="currentScreen === 'stats'"
+                                @change-screen="changeScreen" />
+                </div>
+            `
+        };
+
+        createApp(App).mount('#app');
+    </script>
+</body>
+</html>
