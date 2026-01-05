@@ -2,15 +2,416 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#10b981" />
     <meta name="description" content="Фитнес-трекер для учета тренировок" />
     <title>Фитнес-Трекер</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f3f4f6; }
+        .container { max-width: 400px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #10b981; font-size: 24px; margin-bottom: 8px; }
+        .header p { color: #6b7280; font-size: 14px; }
+        .button { background: #10b981; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; margin: 8px 0; width: 100%; }
+        .button:hover { background: #059669; }
+        .card { background: white; padding: 20px; border-radius: 12px; margin: 16px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .exercise-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+        .exercise-item:last-child { border-bottom: none; }
+        .category { background: #f3f4f6; color: #6b7280; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .loading { text-align: center; padding: 40px; color: #6b7280; }
+        .error { background: #fef2f2; color: #dc2626; padding: 12px; border-radius: 8px; margin: 16px 0; }
+        .success { background: #f0fdf4; color: #16a34a; padding: 12px; border-radius: 8px; margin: 16px 0; }
+    </style>
 </head>
 <body>
-    <noscript>Для работы приложения необходимо включить JavaScript</noscript>
     <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function App() {
+            const [screen, setScreen] = useState('main');
+            const [exercises, setExercises] = useState([]);
+            const [selectedExercise, setSelectedExercise] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+            const [success, setSuccess] = useState('');
+
+            useEffect(() => {
+                if (window.Telegram && window.Telegram.WebApp) {
+                    window.Telegram.WebApp.ready();
+                    window.Telegram.WebApp.expand();
+                }
+                loadExercises();
+            }, []);
+
+            const loadExercises = async () => {
+                setLoading(true);
+                try {
+                    const response = await axios.get('/api/exercises');
+                    setExercises(response.data);
+                } catch (err) {
+                    setError('Ошибка загрузки упражнений');
+                    console.error(err);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const MainScreen = () => (
+                <div className="container">
+                    <div className="header">
+                        <h1>🏋️‍♂️ Фитнес-Трекер</h1>
+                        <p>Отслеживай свои тренировки</p>
+                    </div>
+                    
+                    {error && <div className="error">{error}</div>}
+                    {success && <div className="success">{success}</div>}
+                    
+                    <div className="card">
+                        <button className="button" onClick={() => setScreen('exercises')}>
+                            💪 Начать тренировку
+                        </button>
+                        <button className="button" onClick={() => setScreen('history')}>
+                            📊 История тренировок
+                        </button>
+                        <button className="button" onClick={() => setScreen('stats')}>
+                            📈 Моя статистика
+                        </button>
+                    </div>
+                </div>
+            );
+
+            const ExercisesScreen = () => {
+                const selectExercise = (exercise) => {
+                    setSuccess(`Выбрано упражнение: ${exercise.name}`);
+                    setTimeout(() => {
+                        setScreen('workout');
+                        setSelectedExercise(exercise);
+                    }, 1000);
+                };
+
+                return (
+                    <div className="container">
+                        <div className="header">
+                            <h1>💪 Упражнения</h1>
+                            <p>Выбери упражнение для тренировки</p>
+                        </div>
+                        
+                        {loading ? (
+                            <div className="loading">Загрузка упражнений...</div>
+                        ) : (
+                            <div className="card">
+                                {exercises.map(exercise => (
+                                    <div key={exercise.id} className="exercise-item">
+                                        <div>
+                                            <div>{exercise.name}</div>
+                                            <span className="category">{exercise.category}</span>
+                                        </div>
+                                        <button 
+                                            className="button" 
+                                            style={{width: 'auto', padding: '8px 16px', fontSize: '14px'}}
+                                            onClick={() => selectExercise(exercise)}
+                                        >
+                                            Выбрать
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        
+                        <button className="button" onClick={() => setScreen('main')}>
+                            ← Назад
+                        </button>
+                    </div>
+                );
+            };
+
+            const WorkoutScreen = () => {
+                const [weight, setWeight] = useState('');
+                const [reps, setReps] = useState('');
+                const [useBodyweight, setUseBodyweight] = useState(false);
+                const [savedSets, setSavedSets] = useState([]);
+
+                if (!selectedExercise) {
+                    return (
+                        <div className="container">
+                            <div className="header">
+                                <h1>💪 Тренировка</h1>
+                                <p>Упражнение не выбрано</p>
+                            </div>
+                            <button className="button" onClick={() => setScreen('exercises')}>
+                                ← Выбрать упражнение
+                            </button>
+                        </div>
+                    );
+                }
+
+                const saveSet = async () => {
+                    console.log('saveSet called', { savedSets: savedSets.length, weight, reps, useBodyweight });
+                    
+                    if (!reps) {
+                        setError('Введите количество повторений');
+                        setTimeout(() => setError(''), 3000);
+                        return;
+                    }
+
+                    if (!useBodyweight && !weight) {
+                        setError('Введите вес или выберите "Собственный вес"');
+                        setTimeout(() => setError(''), 3000);
+                        return;
+                    }
+
+                    try {
+                        // API запрос для сохранения подхода
+                        const response = await axios.post('/api/workout-logs', {
+                            user_id: 1,
+                            exercise_id: selectedExercise.id,
+                            set_number: savedSets.length + 1,
+                            weight: useBodyweight ? 0 : parseFloat(weight),
+                            reps: parseInt(reps)
+                        });
+
+                        console.log('API response:', response.data);
+
+                        if (response.data.id) {
+                            const newSet = {
+                                id: response.data.id,
+                                set_number: savedSets.length + 1,
+                                weight: useBodyweight ? 'Собственный вес' : weight,
+                                reps: reps
+                            };
+                            
+                            console.log('New set to add:', newSet);
+                            
+                            const updatedSets = [...savedSets, newSet];
+                            console.log('Updated sets:', updatedSets);
+                            
+                            setSavedSets(updatedSets);
+                            setSuccess(`Подход ${updatedSets.length} сохранен!`);
+                            setTimeout(() => setSuccess(''), 2000);
+                            
+                            // Очищаем поля для следующего подхода
+                            setReps('');
+                            setWeight('');
+                        } else {
+                            setError('Ошибка сохранения подхода');
+                            setTimeout(() => setError(''), 3000);
+                        }
+                    } catch (err) {
+                        console.error('Error saving set:', err);
+                        setError('Ошибка сохранения подхода');
+                        setTimeout(() => setError(''), 3000);
+                    }
+                };
+
+                const finishWorkout = () => {
+                    setSuccess(`Тренировка завершена! Сохранено подходов: ${savedSets.length}`);
+                    setTimeout(() => {
+                        setScreen('main');
+                        setSelectedExercise(null);
+                        setSavedSets([]);
+                    }, 2000);
+                };
+
+                return (
+                    <div className="container">
+                        <div className="header">
+                            <h1>💪 Тренировка</h1>
+                            <p>{selectedExercise.name}</p>
+                            <span className="category">{selectedExercise.category}</span>
+                        </div>
+                        
+                        {error && <div className="error">{error}</div>}
+                        {success && <div className="success">{success}</div>}
+                        
+                        {savedSets.length > 0 && (
+                            <div className="card">
+                                <h3>Сохраненные подходы ({savedSets.length}):</h3>
+                                {savedSets.map(set => (
+                                    <div key={set.id} style={{padding: '8px 0', borderBottom: '1px solid #e5e7eb'}}>
+                                        <strong>Подход {set.set_number}:</strong> {set.reps} повторений, {set.weight} {set.weight === 'Собственный вес' ? '' : 'кг'}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        
+                        <div className="card">
+                            <h3>Добавить подход:</h3>
+                            <div style={{margin: '16px 0'}}>
+                                <div style={{margin: '12px 0'}}>
+                                    <label style={{display: 'flex', alignItems: 'center', cursor: 'pointer'}}>
+                                        <input 
+                                            type="checkbox" 
+                                            checked={useBodyweight}
+                                            onChange={(e) => setUseBodyweight(e.target.checked)}
+                                            style={{marginRight: '8px'}}
+                                        />
+                                        Собственный вес
+                                    </label>
+                                </div>
+                                
+                                {!useBodyweight && (
+                                    <input 
+                                        type="number" 
+                                        placeholder="Вес (кг)" 
+                                        value={weight}
+                                        onChange={(e) => setWeight(e.target.value)}
+                                        style={{width: '100%', padding: '8px', margin: '8px 0', border: '1px solid #d1d5db', borderRadius: '4px'}}
+                                    />
+                                )}
+                                
+                                <input 
+                                    type="number" 
+                                    placeholder="Повторения" 
+                                    value={reps}
+                                    onChange={(e) => setReps(e.target.value)}
+                                    style={{width: '100%', padding: '8px', margin: '8px 0', border: '1px solid #d1d5db', borderRadius: '4px'}}
+                                />
+                            </div>
+                            
+                            <div style={{display: 'flex', gap: '8px', marginTop: '16px'}}>
+                                <button className="button" onClick={saveSet} style={{flex: 1}}>
+                                    ➕ Добавить еще подход
+                                </button>
+                                <button className="button" onClick={finishWorkout} style={{flex: 1, background: '#ef4444'}}>
+                                    ✅ Завершить тренировку
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const HistoryScreen = () => {
+                const [workoutHistory, setWorkoutHistory] = useState([]);
+                const [loading, setLoading] = useState(false);
+
+                useEffect(() => {
+                    loadWorkoutHistory();
+                }, []);
+
+                const loadWorkoutHistory = async () => {
+                    setLoading(true);
+                    try {
+                        // Запрашиваем реальную историю с API
+                        const response = await axios.get('/api/workout-logs/1');
+                        setWorkoutHistory(response.data);
+                    } catch (err) {
+                        setError('Ошибка загрузки истории');
+                        console.error('Error loading workout history:', err);
+                        
+                        // Если API недоступен, используем пустой массив
+                        setWorkoutHistory([]);
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+
+                return (
+                    <div className="container">
+                        <div className="header">
+                            <h1>📊 История</h1>
+                            <p>Твои прошлые тренировки</p>
+                        </div>
+                        
+                        {loading ? (
+                            <div className="loading">Загрузка истории...</div>
+                        ) : workoutHistory.length === 0 ? (
+                            <div className="card">
+                                <div className="loading">История тренировок пуста</div>
+                            </div>
+                        ) : (
+                            workoutHistory.map(day => (
+                                <div key={day.date} className="card" style={{marginBottom: '20px'}}>
+                                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
+                                        <h3 style={{margin: 0, color: '#10b981'}}>
+                                            {new Date(day.date).toLocaleDateString('ru-RU', { 
+                                                day: 'numeric', 
+                                                month: 'long', 
+                                                year: 'numeric' 
+                                            })}
+                                        </h3>
+                                        <div style={{fontSize: '14px', color: '#6b7280'}}>
+                                            {day.totalSets} подходов, {day.totalReps} повторений
+                                        </div>
+                                    </div>
+                                    
+                                    {day.exercises.map(exercise => (
+                                        <div key={exercise.name} style={{padding: '12px', marginBottom: '8px', backgroundColor: '#f9fafb', borderRadius: '8px'}}>
+                                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
+                                                <div>
+                                                    <div style={{fontWeight: 'bold', fontSize: '16px'}}>{exercise.name}</div>
+                                                    <div style={{fontSize: '12px', color: '#6b7280'}}>
+                                                        <span className="category">{exercise.category}</span>
+                                                    </div>
+                                                </div>
+                                                <div style={{textAlign: 'right'}}>
+                                                    <div style={{fontSize: '14px', fontWeight: 'bold', color: '#10b981'}}>
+                                                        {exercise.maxWeight}
+                                                    </div>
+                                                    <div style={{fontSize: '12px', color: '#6b7280'}}>
+                                                        {exercise.totalSets}×{exercise.totalReps}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div style={{fontSize: '12px', color: '#9ca3af', marginBottom: '4px'}}>
+                                                Подходы: {exercise.setsDetail}
+                                            </div>
+                                            
+                                            <div style={{fontSize: '11px', color: '#9ca3af'}}>
+                                                Последний подход: {new Date(exercise.lastSetTime).toLocaleTimeString('ru-RU', {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ))
+                        )}
+                        
+                        <button className="button" onClick={() => setScreen('main')}>
+                            ← Назад
+                        </button>
+                    </div>
+                );
+            };
+
+            const StatsScreen = () => (
+                <div className="container">
+                    <div className="header">
+                        <h1>📈 Статистика</h1>
+                        <p>Твои достижения</p>
+                    </div>
+                    
+                    <div className="card">
+                        <div className="loading">Статистика пока недоступна</div>
+                    </div>
+                    
+                    <button className="button" onClick={() => setScreen('main')}>
+                        ← Назад
+                    </button>
+                </div>
+            );
+
+            switch(screen) {
+                case 'exercises': return <ExercisesScreen />;
+                case 'workout': return <WorkoutScreen />;
+                case 'history': return <HistoryScreen />;
+                case 'stats': return <StatsScreen />;
+                default: return <MainScreen />;
+            }
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
 </body>
 </html>

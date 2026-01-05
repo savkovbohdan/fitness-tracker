@@ -5,7 +5,7 @@ set -e
 cd /var/www/fitness-tracker
 
 echo "Installing system SQLite..."
-apt-get install -y sqlite3 libsqlite3-dev
+apt-get update && apt-get install -y sqlite3 libsqlite3-dev
 
 echo "Installing dependencies..."
 npm install --production
