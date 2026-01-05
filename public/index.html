@@ -130,8 +130,10 @@
 
             const ExercisesScreen = () => {
                 const [showAddForm, setShowAddForm] = useState(false);
-                const [newExercise, setNewExercise] = useState({ name: '', category: 'грудь' });
+                const [newExercise, setNewExercise] = useState({ name: '', category: 'грудь', photo_url: '' });
                 const [addingExercise, setAddingExercise] = useState(false);
+                const [uploadingPhoto, setUploadingPhoto] = useState(false);
+                const fileInputRef = React.useRef(null);
 
                 const selectExercise = (exercise) => {
                     setSuccess(`Выбрано упражнение: ${exercise.name}`);
@@ -139,6 +141,26 @@
                         setScreen('workout');
                         setSelectedExercise(exercise);
                     }, 1000);
+                };
+
+                const uploadPhoto = async (file) => {
+                    if (!file) return;
+                    
+                    setUploadingPhoto(true);
+                    const formData = new FormData();
+                    formData.append('photo', file);
+
+                    try {
+                        const response = await axios.post('/api/upload-exercise-photo', formData, {
+                            headers: { 'Content-Type': 'multipart/form-data' }
+                        });
+                        setNewExercise({...newExercise, photo_url: response.data.photo_url});
+                        setSuccess('Фото загружено!');
+                    } catch (err) {
+                        setError('Ошибка при загрузке фото');
+                    } finally {
+                        setUploadingPhoto(false);
+                    }
                 };
 
                 const addExercise = async () => {
@@ -151,7 +173,7 @@
                     try {
                         const response = await axios.post('/api/exercises', newExercise);
                         setSuccess(`Упражнение "${newExercise.name}" добавлено!`);
-                        setNewExercise({ name: '', category: 'грудь' });
+                        setNewExercise({ name: '', category: 'грудь', photo_url: '' });
                         setShowAddForm(false);
                         loadExercises(); // Reload exercises
                     } catch (err) {
@@ -213,13 +235,50 @@
                                         <option value="руки">Руки</option>
                                         <option value="пресс">Пресс</option>
                                     </select>
+                                    
+                                    <div style={{marginBottom: '12px'}}>
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            accept="image/*"
+                                            onChange={(e) => uploadPhoto(e.target.files[0])}
+                                            style={{display: 'none'}}
+                                        />
+                                        <button
+                                            className="button"
+                                            style={{background: '#6b7280', width: '100%'}}
+                                            onClick={() => fileInputRef.current?.click()}
+                                            disabled={uploadingPhoto}
+                                        >
+                                            {uploadingPhoto ? 'Загрузка...' : '📷 Добавить фото'}
+                                        </button>
+                                    </div>
+                                    
+                                    {newExercise.photo_url && (
+                                        <div style={{marginBottom: '12px', textAlign: 'center'}}>
+                                            <img 
+                                                src={newExercise.photo_url} 
+                                                alt="Preview"
+                                                style={{
+                                                    width: '100px',
+                                                    height: '100px',
+                                                    objectFit: 'cover',
+                                                    borderRadius: '8px',
+                                                    border: '2px solid #10b981'
+                                                }}
+                                            />
+                                            <div style={{fontSize: '12px', color: '#6b7280', marginTop: '4px'}}>
+                                                Фото загружено
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                                 <div style={{display: 'flex', gap: '8px'}}>
                                     <button 
                                         className="button"
                                         style={{background: '#10b981'}}
                                         onClick={addExercise}
-                                        disabled={addingExercise}
+                                        disabled={addingExercise || uploadingPhoto}
                                     >
                                         {addingExercise ? 'Добавление...' : 'Добавить'}
                                     </button>
@@ -228,7 +287,7 @@
                                         style={{background: '#6b7280'}}
                                         onClick={() => {
                                             setShowAddForm(false);
-                                            setNewExercise({ name: '', category: 'грудь' });
+                                            setNewExercise({ name: '', category: 'грудь', photo_url: '' });
                                         }}
                                     >
                                         Отмена

@@ -66,6 +66,22 @@ async function initializeDatabase() {
       )
     `);
 
+    // Add photo_url column if it doesn't exist
+    try {
+      await pool.query(`ALTER TABLE exercises ADD COLUMN IF NOT EXISTS photo_url TEXT`);
+      console.log('✅ photo_url column added or already exists');
+    } catch (err) {
+      console.log('photo_url column already exists');
+    }
+
+    // Add created_at column if it doesn't exist
+    try {
+      await pool.query(`ALTER TABLE exercises ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`);
+      console.log('✅ created_at column added or already exists');
+    } catch (err) {
+      console.log('created_at column already exists');
+    }
+
     await pool.query(`
       CREATE TABLE IF NOT EXISTS workout_logs (
         id SERIAL PRIMARY KEY,
