@@ -87,16 +87,21 @@ async function initializeDatabase() {
     if (exercisesResult.rows[0].count === 0) {
       console.log('Creating base exercises...');
       const exercises = [
-        ['Жим лежа', 'грудь'], ['Приседания со штангой', 'ноги'],
-        ['Становая тяга', 'спина'], ['Подтягивания', 'спина'],
-        ['Армейский жим', 'плечи'], ['Бицепс со штангой', 'руки'],
-        ['Трицепс на блоке', 'руки'], ['Сгибания ног', 'ноги'],
-        ['Гиперэкстензия', 'спина'], ['Скручивания', 'пресс']
+        ['Жим лежа', 'грудь', 'https://media.giphy.com/media/xT9IgG50Fb7Mi0prBC/giphy.gif'],
+        ['Приседания со штангой', 'ноги', 'https://media.giphy.com/media/3o7aD5dt1i1qS5y4yI/giphy.gif'],
+        ['Становая тяга', 'спина', 'https://media.giphy.com/media/3o7aD5dt1i1qS5y4yI/giphy.gif'],
+        ['Подтягивания', 'спина', 'https://media.giphy.com/media/3o7aD5dt1i1qS5y4yI/giphy.gif'],
+        ['Армейский жим', 'плечи', 'https://media.giphy.com/media/3o7aD5dt1i1qS5y4yI/giphy.gif'],
+        ['Бицепс со штангой', 'руки', 'https://media.giphy.com/media/3o7aD5dt1i1qS5y4yI/giphy.gif'],
+        ['Трицепс на блоке', 'руки', 'https://media.giphy.com/media/3o7aD5dt1i1qS5y4yI/giphy.gif'],
+        ['Сгибания ног', 'ноги', 'https://media.giphy.com/media/3o7aD5dt1i1qS5y4yI/giphy.gif'],
+        ['Гиперэкстензия', 'спина', 'https://media.giphy.com/media/3o7aD5dt1i1qS5y4yI/giphy.gif'],
+        ['Скручивания', 'пресс', 'https://media.giphy.com/media/3o7aD5dt1i1qS5y4yI/giphy.gif']
       ];
 
-      for (const [name, category] of exercises) {
+      for (const [name, category, photo_url] of exercises) {
         console.log(`Adding exercise: ${name} (${category})`);
-        const result = await pool.query('INSERT INTO exercises (name, category, is_custom) VALUES ($1, $2, 0)', [name, category]);
+        const result = await pool.query('INSERT INTO exercises (name, category, is_custom, photo_url) VALUES ($1, $2, 0, $3)', [name, category, photo_url]);
         console.log(`Exercise added with ID: ${result.rows[0].id}`);
       }
       console.log('✅ Базовые упражнения добавлены');
