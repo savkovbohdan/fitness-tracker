@@ -21,6 +21,25 @@ bot.getMe()
     process.exit(1);
   });
 
+// Логирование всех сообщений
+bot.on('message', (msg) => {
+  console.log('📨 Received message:', {
+    chatId: msg.chat.id,
+    text: msg.text,
+    from: msg.from.first_name,
+    date: new Date(msg.date * 1000).toISOString()
+  });
+});
+
+// Логирование всех callback запросов
+bot.on('callback_query', (query) => {
+  console.log('🔘 Received callback:', {
+    chatId: query.message.chat.id,
+    data: query.data,
+    from: query.from.first_name
+  });
+});
+
 // Команды бота
 bot.onText(/\/start/, async (msg) => {
   console.log('📨 Received /start command from:', msg.chat.id);
