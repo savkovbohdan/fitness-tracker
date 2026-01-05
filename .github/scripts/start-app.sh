@@ -20,6 +20,7 @@ DB_PASSWORD=postgres123
 EOF
 
 echo "Setting up PostgreSQL database..."
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres123';" || echo "Password already set"
 sudo -u postgres psql -c "CREATE DATABASE fitness_tracker;" || echo "Database already exists"
 sudo -u postgres psql -c "CREATE USER fitness_user WITH PASSWORD 'postgres123';" || echo "User already exists"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE fitness_tracker TO fitness_user;" || echo "Privileges already granted"
