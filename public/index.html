@@ -156,8 +156,12 @@
                         });
                         setNewExercise({...newExercise, photo_url: response.data.photo_url});
                         setSuccess('Фото загружено!');
+                        
+                        // Очищаем ошибку если была
+                        setError(null);
                     } catch (err) {
-                        setError('Ошибка при загрузке фото');
+                        setError('Ошибка при загрузке фото: ' + (err.response?.data?.error || err.message));
+                        // Не очищаем фото URL при ошибке
                     } finally {
                         setUploadingPhoto(false);
                     }
@@ -246,7 +250,16 @@
                                             type="file"
                                             ref={fileInputRef}
                                             accept="image/*"
-                                            onChange={(e) => uploadPhoto(e.target.files[0])}
+                                            onChange={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                const file = e.target.files[0];
+                                                if (file) {
+                                                    uploadPhoto(file);
+                                                }
+                                                // Очищаем значение input для возможности повторного выбора того же файла
+                                                e.target.value = '';
+                                            }}
                                             style={{display: 'none'}}
                                         />
                                         <button
