@@ -60,7 +60,11 @@ echo "Force database initialization..."
 curl -X POST http://localhost:5001/api/init-db || echo "DB init failed"
 
 echo "Setting up SSL certificates..."
-sudo certbot --nginx -d 178.212.12.73 --non-interactive --agree-tos --email admin@178.212.12.73 || echo "SSL setup failed or already exists"
+sudo certbot certonly --standalone -d 178.212.12.73 --non-interactive --agree-tos --email admin@178.212.12.73 --register-unsafely-without-email || echo "SSL setup failed or already exists"
+
+echo "Opening firewall for HTTPS..."
+sudo ufw allow 443/tcp || echo "Firewall already configured"
+sudo ufw allow 80/tcp || echo "HTTP already allowed"
 
 pm2 save
 

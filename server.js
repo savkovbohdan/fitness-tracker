@@ -198,25 +198,27 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Сервер запущен на порту ${PORT}`);
-  console.log(`🌐 http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 HTTP сервер запущен на порту ${PORT}`);
+  console.log(`🌐 http://178.212.12.73:${PORT}`);
   
   // Try to start HTTPS server if certificates exist
-  try {
-    const privateKey = fs.readFileSync('/etc/letsencrypt/live/178.212.12.73/privkey.pem', 'utf8');
-    const certificate = fs.readFileSync('/etc/letsencrypt/live/178.212.12.73/cert.pem', 'utf8');
-    const ca = fs.readFileSync('/etc/letsencrypt/live/178.212.12.73/chain.pem', 'utf8');
-    
-    const credentials = { key: privateKey, cert: certificate, ca: ca };
-    const httpsServer = https.createServer(credentials, app);
-    
-    httpsServer.listen(443, () => {
-      console.log(`🔒 HTTPS сервер запущен на порту 443`);
-      console.log(`🌐 https://178.212.12.73`);
-    });
-  } catch (err) {
-    console.log('📝 SSL сертификаты не найдены, работаем только на HTTP');
-    console.log('💡 Для HTTPS установи сертификаты Let\'s Encrypt');
-  }
+  setTimeout(() => {
+    try {
+      const privateKey = fs.readFileSync('/etc/letsencrypt/live/178.212.12.73/privkey.pem', 'utf8');
+      const certificate = fs.readFileSync('/etc/letsencrypt/live/178.212.12.73/cert.pem', 'utf8');
+      const ca = fs.readFileSync('/etc/letsencrypt/live/178.212.12.73/chain.pem', 'utf8');
+      
+      const credentials = { key: privateKey, cert: certificate, ca: ca };
+      const httpsServer = https.createServer(credentials, app);
+      
+      httpsServer.listen(443, '0.0.0.0', () => {
+        console.log(`🔒 HTTPS сервер запущен на порту 443`);
+        console.log(`🌐 https://178.212.12.73`);
+      });
+    } catch (err) {
+      console.log('📝 SSL сертификаты не найдены, работаем только на HTTP');
+      console.log('💡 Для HTTPS установи сертификаты Let\'s Encrypt');
+    }
+  }, 2000); // Wait 2 seconds for HTTP server to start
 });
