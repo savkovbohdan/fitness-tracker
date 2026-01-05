@@ -22,10 +22,10 @@ jobs:
         port: 22
         script: |
           set -e
-          cd /var/www/fitness-tracker
           pm2 stop fitness-tracker || true
           pm2 delete fitness-tracker || true
-          rm -rf * || true
+          mkdir -p /var/www/fitness-tracker
+          rm -rf /var/www/fitness-tracker/* || true
 
     - name: Copy Files
       uses: appleboy/scp-action@master
