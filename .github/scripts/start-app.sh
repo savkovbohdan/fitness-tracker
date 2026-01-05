@@ -50,13 +50,21 @@ sleep 10
 echo "Starting Python Mini App Bot..."
 pm2 stop mini-app-bot || echo "Python bot not running"
 pm2 delete mini-app-bot || echo "Python bot not found"
-pm2 start mini_app_bot.py --name mini-app-bot --interpreter python3 --env TELEGRAM_BOT_TOKEN=8386581272:AAEL5k6Kxx1ZDN2jeoONNRbe1NKdPwEZe8M --env WEBAPP_URL=http://178.212.12.73
+
+# Check Python syntax first
+python3 -c "import mini_app_bot" || echo "Python syntax error in mini_app_bot.py"
+
+# Start bot with full path and environment
+pm2 start mini_app_bot.py --name mini-app-bot --interpreter /usr/bin/python3 --env TELEGRAM_BOT_TOKEN=8386581272:AAEL5k6Kxx1ZDN2jeoONNRbe1NKdPwEZe8M --env WEBAPP_URL=http://178.212.12.73
 
 # Wait for python bot to start
 sleep 5
 
 echo "Checking bot status..."
 pm2 status mini-app-bot
+
+echo "Checking Python bot logs..."
+pm2 logs mini-app-bot --lines 10 || echo "Cannot get logs"
 
 echo "Force database initialization..."
 curl -X POST http://localhost:5001/api/init-db || echo "DB init failed"
