@@ -5,10 +5,13 @@ set -e
 cd /var/www/fitness-tracker
 
 echo "Installing PostgreSQL client..."
-apt-get update && apt-get install -y postgresql postgresql-contrib
+apt-get update && apt-get install -y postgresql postgresql-contrib python3-pip
 
 echo "Installing dependencies..."
 npm install --production
+
+echo "Installing Python dependencies..."
+pip3 install -r requirements.txt || echo "Python requirements already installed"
 
 echo "Setting up environment variables..."
 cat > .env << EOF
@@ -40,16 +43,16 @@ pm2 start server.js --name fitness-tracker
 # Wait for app to start
 sleep 10
 
-echo "Starting Telegram Bot..."
-pm2 stop telegram-bot || echo "Bot not running"
-pm2 delete telegram-bot || echo "Bot not found"
-pm2 start telegram-bot.js --name telegram-bot
+echo "Starting Python Mini App Bot..."
+pm2 stop mini-app-bot || echo "Python bot not running"
+pm2 delete mini-app-bot || echo "Python bot not found"
+pm2 start mini_app_bot.py --name mini-app-bot --interpreter python3
 
-# Wait for bot to start
+# Wait for python bot to start
 sleep 5
 
 echo "Checking bot status..."
-pm2 status telegram-bot
+pm2 status mini-app-bot
 
 echo "Force database initialization..."
 curl -X POST http://localhost:5001/api/init-db || echo "DB init failed"
@@ -63,4 +66,4 @@ curl -s http://localhost:5001/api/exercises | jq '. | length' || echo "Cannot ch
 echo "Deployment completed!"
 echo "HTTP URL: http://$(curl -s ifconfig.me 2>/dev/null || echo '178.212.12.73')"
 echo "Application is working!"
-echo "Telegram Bot: @FitnessTrackerBot"
+echo "Python Mini App Bot: @FitnessTrackerBot"
