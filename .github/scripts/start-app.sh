@@ -53,8 +53,14 @@ pm2 logs fitness-tracker --lines 10
 echo "Testing local API..."
 curl -f http://localhost:5001/api/health || echo "Local API failed"
 
+echo "Testing exercises API..."
+curl -f http://localhost:5001/api/exercises || echo "Exercises API failed"
+
 echo "Testing bcrypt functionality..."
 node -e "const bcrypt = require('bcrypt'); bcrypt.hash('test', 10).then(hash => console.log('✅ bcrypt works:', hash.substring(0, 20) + '...')).catch(err => console.error('❌ bcrypt error:', err))"
+
+echo "Force database initialization..."
+curl -X POST http://localhost:5001/api/init-db || echo "DB init failed"
 
 pm2 save
 

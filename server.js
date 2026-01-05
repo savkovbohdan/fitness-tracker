@@ -94,6 +94,16 @@ app.get('/api/health', (req, res) => {
   res.json({status: 'ok', message: '🏋️‍♂️ Фитнес-Трекер работает!'});
 });
 
+app.post('/api/init-db', async (req, res) => {
+  try {
+    await initializeDatabase();
+    res.json({status: 'ok', message: 'Database initialized successfully'});
+  } catch (err) {
+    console.error('Database init error:', err);
+    res.status(500).json({error: err.message});
+  }
+});
+
 app.get('/api/exercises', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM exercises ORDER BY is_custom, name');
@@ -133,7 +143,7 @@ app.get('/api/workout-logs/:user_id', async (req, res) => {
         COUNT(*) as total_sets,
         SUM(wl.reps) as total_reps,
         MAX(wl.weight) as max_weight,
-        ROUND(AVG(wl.weight), 1) as avg_weight,
+        ROUND(AVG(wl.weight)::numeric, 1) as avg_weight,
         STRING_AGG(
           wl.set_number || 'x' || wl.reps || '(' || wl.weight || 'kg)', ', ' ORDER BY wl.set_number
         ) as sets_detail,
