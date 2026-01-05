@@ -1,36 +1,31 @@
 // ExerciseIcon Component
-const ExerciseIcon = ({ photoUrl, size = 40, style = {} }) => {
+const ExerciseIcon = ({ photoUrl, size = 48, style = {} }) => {
+    const iconClass = photoUrl ? 'exercise-icon photo' : 'exercise-icon placeholder';
     const iconStyle = {
         width: `${size}px`,
         height: `${size}px`,
-        borderRadius: '6px',
-        marginRight: '12px',
-        border: '1px solid #e5e7eb',
-        flexShrink: 0,
         ...style
     };
 
     if (photoUrl) {
-        return React.createElement('img', {
+        return React.createElement('div', {
+            className: iconClass,
+            style: iconStyle
+        }, React.createElement('img', {
             src: photoUrl,
             alt: "Exercise",
             style: {
-                ...iconStyle,
-                objectFit: 'cover'
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                borderRadius: '10px'
             }
-        });
+        }));
     }
 
     return React.createElement('div', {
-        style: {
-            ...iconStyle,
-            backgroundColor: '#f3f4f6',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: `${size * 0.45}px`,
-            color: '#9ca3af'
-        }
+        className: iconClass,
+        style: iconStyle
     }, '💪');
 };
 
@@ -38,15 +33,15 @@ const ExerciseIcon = ({ photoUrl, size = 40, style = {} }) => {
 const MainScreen = ({ setScreen, error, success }) => {
     return React.createElement('div', { className: "container" },
         React.createElement('div', { className: "header" },
-            React.createElement('h1', null, "🏋️‍♂️ Фитнес-Трекер"),
+            React.createElement('h1', null, "💪 Фитнес-Трекер"),
             React.createElement('p', null, "Отслеживай свои тренировки")
         ),
         error && React.createElement('div', { className: "error" }, error),
         success && React.createElement('div', { className: "success" }, success),
         React.createElement('div', { className: "card" },
             React.createElement('button', { className: "button", onClick: () => setScreen('exercises') }, "💪 Начать тренировку"),
-            React.createElement('button', { className: "button", onClick: () => setScreen('history') }, "📊 История тренировок"),
-            React.createElement('button', { className: "button", onClick: () => setScreen('stats') }, "📈 Моя статистика")
+            React.createElement('button', { className: "button secondary", onClick: () => setScreen('history') }, "📊 История тренировок"),
+            React.createElement('button', { className: "button secondary", onClick: () => setScreen('stats') }, "📈 Моя статистика")
         )
     );
 };
@@ -114,8 +109,8 @@ const ExercisesScreen = ({
                         style: {display: 'none'}
                     }),
                     React.createElement('button', {
-                        className: "button",
-                        style: {background: '#6b7280', width: '100%'},
+                        className: "button secondary",
+                        style: {background: 'rgba(255, 255, 255, 0.2)', width: '100%'},
                         onClick: () => fileInputRef.current?.click(),
                         disabled: uploadingPhoto
                     }, uploadingPhoto ? 'Загрузка...' : '📷 Добавить фото')
@@ -143,8 +138,7 @@ const ExercisesScreen = ({
                     disabled: addingExercise || uploadingPhoto
                 }, addingExercise ? 'Добавление...' : 'Добавить'),
                 React.createElement('button', {
-                    className: "button",
-                    style: {background: '#6b7280'},
+                    className: "button secondary",
                     onClick: () => {
                         setShowAddForm(false);
                         setNewExercise({ name: '', category: 'грудь', photo_url: '' });
@@ -185,8 +179,7 @@ const ExercisesScreen = ({
                         )
                     ),
                     React.createElement('button', { 
-                        className: "button", 
-                        style: {width: 'auto', padding: '8px 16px', fontSize: '14px'},
+                        className: "button secondary",
                         onClick: () => selectExercise(exercise)
                     }, "Выбрать")
                 )
@@ -277,9 +270,9 @@ const WorkoutScreen = ({
                     style: {flex: 1}
                 }, "➕ Добавить подход"),
                 React.createElement('button', { 
-                    className: "button", 
+                    className: "button danger",
                     onClick: finishWorkout, 
-                    style: {flex: 1, background: '#ef4444'}
+                    style: {flex: 1}
                 }, "✅ Завершить тренировку")
             )
         )
@@ -298,41 +291,41 @@ const HistoryScreen = ({ workoutHistory, loading, loadWorkoutHistory }) => {
             React.createElement('div', { className: "loading" }, "История тренировок пуста")
         ) :
         workoutHistory.map(day =>
-            React.createElement('div', { key: day.date, className: "card", style: {marginBottom: '20px'} },
-                React.createElement('div', { style: {display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'} },
-                    React.createElement('h3', { style: {margin: 0, color: '#10b981'} },
+            React.createElement('div', { key: day.date, className: "workout-day" },
+                React.createElement('div', { className: "workout-day-header" },
+                    React.createElement('h3', { className: "workout-day-title" },
                         new Date(day.date).toLocaleDateString('ru-RU', { 
                             day: 'numeric', 
                             month: 'long', 
                             year: 'numeric' 
                         })
                     ),
-                    React.createElement('div', { style: {fontSize: '14px', color: '#6b7280'} },
+                    React.createElement('div', { className: "workout-day-stats" },
                         `${day.totalSets} подходов, ${day.totalReps} повторений`
                     )
                 ),
                 day.exercises.map(exercise =>
                     React.createElement('div', { 
                         key: exercise.name, 
-                        style: {padding: '12px', marginBottom: '8px', backgroundColor: '#f9fafb', borderRadius: '8px'} 
+                        className: "exercise-in-history" 
                     },
-                        React.createElement('div', { style: {display: 'flex', alignItems: 'center', marginBottom: '8px'} },
+                        React.createElement('div', { style: {display: 'flex', alignItems: 'center', marginBottom: '12px'} },
                             React.createElement(ExerciseIcon, { photoUrl: exercise.photo_url, size: 40 }),
                             React.createElement('div', { style: {flex: 1, minWidth: 0} },
-                                React.createElement('div', { style: {fontWeight: 'bold', fontSize: '16px', marginBottom: '2px'} }, exercise.name),
-                                React.createElement('div', { style: {fontSize: '12px', color: '#6b7280'} },
+                                React.createElement('div', { style: {fontWeight: 'bold', fontSize: '16px', marginBottom: '4px'} }, exercise.name),
+                                React.createElement('div', { style: {fontSize: '12px', color: '#718096'} },
                                     React.createElement('span', { className: "category" }, exercise.category)
                                 )
                             ),
                             React.createElement('div', { style: {textAlign: 'right', marginLeft: '12px', flexShrink: 0} },
-                                React.createElement('div', { style: {fontSize: '14px', fontWeight: 'bold', color: '#10b981'} }, exercise.maxWeight),
-                                React.createElement('div', { style: {fontSize: '12px', color: '#6b7280'} }, `${exercise.totalSets}×${exercise.totalReps}`)
+                                React.createElement('div', { style: {fontSize: '14px', fontWeight: 'bold', color: '#667eea'} }, exercise.maxWeight),
+                                React.createElement('div', { style: {fontSize: '12px', color: '#718096'} }, `${exercise.totalSets}×${exercise.totalReps}`)
                             )
                         ),
-                        React.createElement('div', { style: {fontSize: '12px', color: '#9ca3af', marginBottom: '4px', paddingLeft: '52px'} },
+                        React.createElement('div', { style: {fontSize: '12px', color: '#718096', marginBottom: '4px', paddingLeft: '56px'} },
                             `Подходы: ${exercise.setsDetail}`
                         ),
-                        React.createElement('div', { style: {fontSize: '11px', color: '#9ca3af', paddingLeft: '52px'} },
+                        React.createElement('div', { style: {fontSize: '11px', color: '#a0aec0', paddingLeft: '56px'} },
                             `Последний подход: ${new Date(exercise.lastSetTime).toLocaleTimeString('ru-RU', {
                                 hour: '2-digit',
                                 minute: '2-digit'
