@@ -3,7 +3,8 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
-const bcrypt = require('bcrypt');
+const https = require('https');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -200,4 +201,22 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Сервер запущен на порту ${PORT}`);
   console.log(`🌐 http://localhost:${PORT}`);
+  
+  // Try to start HTTPS server if certificates exist
+  try {
+    const privateKey = fs.readFileSync('/etc/letsencrypt/live/178.212.12.73/privkey.pem', 'utf8');
+    const certificate = fs.readFileSync('/etc/letsencrypt/live/178.212.12.73/cert.pem', 'utf8');
+    const ca = fs.readFileSync('/etc/letsencrypt/live/178.212.12.73/chain.pem', 'utf8');
+    
+    const credentials = { key: privateKey, cert: certificate, ca: ca };
+    const httpsServer = https.createServer(credentials, app);
+    
+    httpsServer.listen(443, () => {
+      console.log(`🔒 HTTPS сервер запущен на порту 443`);
+      console.log(`🌐 https://178.212.12.73`);
+    });
+  } catch (err) {
+    console.log('📝 SSL сертификаты не найдены, работаем только на HTTP');
+    console.log('💡 Для HTTPS установи сертификаты Let\'s Encrypt');
+  }
 });

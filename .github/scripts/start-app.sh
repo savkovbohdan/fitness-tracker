@@ -56,13 +56,14 @@ curl -f http://localhost:5001/api/health || echo "Local API failed"
 echo "Testing exercises API..."
 curl -f http://localhost:5001/api/exercises || echo "Exercises API failed"
 
-echo "Testing bcrypt functionality..."
-node -e "const bcrypt = require('bcrypt'); bcrypt.hash('test', 10).then(hash => console.log('✅ bcrypt works:', hash.substring(0, 20) + '...')).catch(err => console.error('❌ bcrypt error:', err))"
-
 echo "Force database initialization..."
 curl -X POST http://localhost:5001/api/init-db || echo "DB init failed"
+
+echo "Setting up SSL certificates..."
+sudo certbot --nginx -d 178.212.12.73 --non-interactive --agree-tos --email admin@178.212.12.73 || echo "SSL setup failed or already exists"
 
 pm2 save
 
 echo "Deployment completed!"
-echo "Application URL: http://$(curl -s ifconfig.me 2>/dev/null || echo '178.212.12.73')"
+echo "HTTP URL: http://$(curl -s ifconfig.me 2>/dev/null || echo '178.212.12.73')"
+echo "HTTPS URL: https://$(curl -s ifconfig.me 2>/dev/null || echo '178.212.12.73')"
