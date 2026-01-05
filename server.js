@@ -25,7 +25,7 @@ const pool = new Pool({
 
 async function initializeDatabase() {
   try {
-    console.log('Connected to PostgreSQL database');
+    console.log('🔧 Initializing database...');
     
     // Create tables
     await pool.query(`
@@ -58,6 +58,8 @@ async function initializeDatabase() {
       )
     `);
 
+    console.log('📋 Tables created successfully');
+
     // Check if exercises exist
     const exercisesResult = await pool.query('SELECT COUNT(*) as count FROM exercises');
     console.log('Exercises count:', exercisesResult.rows[0].count);
@@ -74,7 +76,8 @@ async function initializeDatabase() {
 
       for (const [name, category] of exercises) {
         console.log(`Adding exercise: ${name} (${category})`);
-        await pool.query('INSERT INTO exercises (name, category, is_custom) VALUES ($1, $2, 0)', [name, category]);
+        const result = await pool.query('INSERT INTO exercises (name, category, is_custom) VALUES ($1, $2, 0)', [name, category]);
+        console.log(`Exercise added with ID: ${result.rows[0].id}`);
       }
       console.log('✅ Базовые упражнения добавлены');
     } else {
@@ -82,11 +85,15 @@ async function initializeDatabase() {
     }
 
     // Add test user
-    await pool.query('INSERT INTO users (telegram_id, username, first_name) VALUES ($1, $2, $3) ON CONFLICT (telegram_id) DO NOTHING', 
+    const userResult = await pool.query('INSERT INTO users (telegram_id, username, first_name) VALUES ($1, $2, $3) ON CONFLICT (telegram_id) DO NOTHING', 
       [12345, 'testuser', 'Test User']);
+    console.log('Test user added or already exists');
 
+    console.log('🎯 Database initialization completed successfully');
+    
   } catch (err) {
     console.error('Database initialization error:', err);
+    throw err;
   }
 }
 
@@ -217,8 +224,9 @@ app.get('*', (req, res) => {
 
 async function startServer() {
   try {
+    console.log('🚀 Starting server and initializing database...');
     await initializeDatabase();
-    console.log('Database initialization completed');
+    console.log('✅ Database ready, starting HTTP server...');
     
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 HTTP сервер запущен на порту ${PORT}`);
