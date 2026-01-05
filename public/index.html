@@ -617,47 +617,52 @@
                                     
                                     {day.exercises.map(exercise => (
                                         <div key={exercise.name} style={{padding: '12px', marginBottom: '8px', backgroundColor: '#f9fafb', borderRadius: '8px'}}>
-                                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
-                                                <div style={{display: 'flex', alignItems: 'center', flex: 1}}>
-                                                    {exercise.photo_url && (
-                                                        <img 
-                                                            src={exercise.photo_url} 
-                                                            alt={exercise.name}
-                                                            style={{
-                                                                width: '40px',
-                                                                height: '40px',
-                                                                objectFit: 'cover',
-                                                                borderRadius: '6px',
-                                                                marginRight: '12px',
-                                                                border: '1px solid #e5e7eb'
-                                                            }}
-                                                        />
-                                                    )}
-                                                    {!exercise.photo_url && (
-                                                        <div style={{
+                                            <div style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
+                                                {/* Фото слева */}
+                                                {exercise.photo_url && (
+                                                    <img 
+                                                        src={exercise.photo_url} 
+                                                        alt={exercise.name}
+                                                        style={{
                                                             width: '40px',
                                                             height: '40px',
+                                                            objectFit: 'cover',
                                                             borderRadius: '6px',
                                                             marginRight: '12px',
-                                                            backgroundColor: '#f3f4f6',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            fontSize: '18px',
-                                                            color: '#9ca3af',
-                                                            border: '1px solid #e5e7eb'
-                                                        }}>
-                                                            💪
-                                                        </div>
-                                                    )}
-                                                    <div style={{flex: 1}}>
-                                                        <div style={{fontWeight: 'bold', fontSize: '16px'}}>{exercise.name}</div>
-                                                        <div style={{fontSize: '12px', color: '#6b7280'}}>
-                                                            <span className="category">{exercise.category}</span>
-                                                        </div>
+                                                            border: '1px solid #e5e7eb',
+                                                            flexShrink: 0
+                                                        }}
+                                                    />
+                                                )}
+                                                {!exercise.photo_url && (
+                                                    <div style={{
+                                                        width: '40px',
+                                                        height: '40px',
+                                                        borderRadius: '6px',
+                                                        marginRight: '12px',
+                                                        backgroundColor: '#f3f4f6',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: '18px',
+                                                        color: '#9ca3af',
+                                                        border: '1px solid #e5e7eb',
+                                                        flexShrink: 0
+                                                    }}>
+                                                        💪
+                                                    </div>
+                                                )}
+                                                
+                                                {/* Информация об упражнении */}
+                                                <div style={{flex: 1, minWidth: 0}}>
+                                                    <div style={{fontWeight: 'bold', fontSize: '16px', marginBottom: '2px'}}>{exercise.name}</div>
+                                                    <div style={{fontSize: '12px', color: '#6b7280'}}>
+                                                        <span className="category">{exercise.category}</span>
                                                     </div>
                                                 </div>
-                                                <div style={{textAlign: 'right'}}>
+                                                
+                                                {/* Статистика справа */}
+                                                <div style={{textAlign: 'right', marginLeft: '12px', flexShrink: 0}}>
                                                     <div style={{fontSize: '14px', fontWeight: 'bold', color: '#10b981'}}>
                                                         {exercise.maxWeight}
                                                     </div>
@@ -667,11 +672,11 @@
                                                 </div>
                                             </div>
                                             
-                                            <div style={{fontSize: '12px', color: '#9ca3af', marginBottom: '4px'}}>
+                                            <div style={{fontSize: '12px', color: '#9ca3af', marginBottom: '4px', paddingLeft: '52px'}}>
                                                 Подходы: {exercise.setsDetail}
                                             </div>
                                             
-                                            <div style={{fontSize: '11px', color: '#9ca3af'}}>
+                                            <div style={{fontSize: '11px', color: '#9ca3af', paddingLeft: '52px'}}>
                                                 Последний подход: {new Date(exercise.lastSetTime).toLocaleTimeString('ru-RU', {
                                                     hour: '2-digit',
                                                     minute: '2-digit'
