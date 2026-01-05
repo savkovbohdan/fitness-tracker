@@ -11,7 +11,7 @@ echo "Installing dependencies..."
 npm install --production
 
 echo "Installing Python dependencies..."
-pip3 install -r requirements.txt || echo "Python requirements already installed"
+pip3 install --break-system-packages python-telegram-bot==13.15 python-dotenv==1.0.0 || echo "Python requirements already installed"
 
 echo "Setting up environment variables..."
 cat > .env << EOF
@@ -42,6 +42,8 @@ echo "Testing Node.js syntax..."
 node -c server.js || echo "Syntax error in server.js"
 
 echo "Starting application..."
+pm2 stop fitness-tracker || echo "App not running"
+pm2 delete fitness-tracker || echo "App not found"
 pm2 start server.js --name fitness-tracker
 
 # Wait for app to start
