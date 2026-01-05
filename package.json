@@ -20,7 +20,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
-    "node-sqlite3": "^5.1.6"
+    "pg": "^8.11.3"
   },
   "devDependencies": {
     "ajv": "^6.12.6",
