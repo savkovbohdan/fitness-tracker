@@ -4,6 +4,11 @@
 set -e
 cd /var/www/fitness-tracker
 
+echo "Force cleanup old files..."
+pm2 stop fitness-tracker || true
+pm2 delete fitness-tracker || true
+rm -rf * .* || true
+
 echo "Installing PostgreSQL client..."
 apt-get update && apt-get install -y postgresql postgresql-contrib
 
@@ -23,6 +28,12 @@ echo "Setting up PostgreSQL database..."
 sudo -u postgres psql -c "CREATE DATABASE fitness_tracker;" || echo "Database already exists"
 sudo -u postgres psql -c "CREATE USER fitness_user WITH PASSWORD 'postgres123';" || echo "User already exists"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE fitness_tracker TO fitness_user;" || echo "Privileges already granted"
+
+echo "Verify files are updated..."
+echo "=== server.js first 5 lines ==="
+head -5 server.js
+echo "=== package.json pg version ==="
+grep '"pg"' package.json
 
 echo "Setting permissions..."
 chown -R www-data:www-data /var/www/fitness-tracker
