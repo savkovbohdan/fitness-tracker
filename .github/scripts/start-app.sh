@@ -10,6 +10,9 @@ apt-get update && apt-get install -y postgresql postgresql-contrib
 echo "Installing dependencies..."
 npm install --production
 
+echo "Installing jq for JSON parsing..."
+apt-get update && apt-get install -y jq || echo "jq already installed"
+
 echo "Setting up environment variables..."
 cat > .env << EOF
 DB_HOST=localhost
@@ -36,10 +39,16 @@ echo "Starting application..."
 pm2 start server.js --name fitness-tracker
 
 # Wait for app to start
-sleep 15
+sleep 10
 
-echo "Checking app status..."
-pm2 status fitness-tracker
+echo "Force database initialization..."
+curl -X POST http://localhost:5001/api/init-db || echo "DB init failed"
+
+echo "Testing exercises API..."
+curl -f http://localhost:5001/api/exercises || echo "Exercises API failed"
+
+echo "Checking exercises count..."
+curl -s http://localhost:5001/api/exercises | jq '. | length' || echo "Cannot check exercises count"
 
 echo "Deployment completed!"
 echo "HTTP URL: http://$(curl -s ifconfig.me 2>/dev/null || echo '178.212.12.73')"
