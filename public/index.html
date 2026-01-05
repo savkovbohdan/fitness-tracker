@@ -129,6 +129,10 @@
             );
 
             const ExercisesScreen = () => {
+                const [showAddForm, setShowAddForm] = useState(false);
+                const [newExercise, setNewExercise] = useState({ name: '', category: 'грудь' });
+                const [addingExercise, setAddingExercise] = useState(false);
+
                 const selectExercise = (exercise) => {
                     setSuccess(`Выбрано упражнение: ${exercise.name}`);
                     setTimeout(() => {
@@ -137,12 +141,101 @@
                     }, 1000);
                 };
 
+                const addExercise = async () => {
+                    if (!newExercise.name.trim()) {
+                        setError('Название упражнения обязательно');
+                        return;
+                    }
+
+                    setAddingExercise(true);
+                    try {
+                        const response = await axios.post('/api/exercises', newExercise);
+                        setSuccess(`Упражнение "${newExercise.name}" добавлено!`);
+                        setNewExercise({ name: '', category: 'грудь' });
+                        setShowAddForm(false);
+                        loadExercises(); // Reload exercises
+                    } catch (err) {
+                        setError(err.response?.data?.error || 'Ошибка при добавлении упражнения');
+                    } finally {
+                        setAddingExercise(false);
+                    }
+                };
+
                 return (
                     <div className="container">
                         <div className="header">
                             <h1>💪 Упражнения</h1>
                             <p>Выбери упражнение для тренировки</p>
                         </div>
+                        
+                        <button 
+                            className="button" 
+                            style={{background: '#3b82f6', marginBottom: '20px'}}
+                            onClick={() => setShowAddForm(!showAddForm)}
+                        >
+                            {showAddForm ? 'Отмена' : '➕ Добавить свое упражнение'}
+                        </button>
+
+                        {showAddForm && (
+                            <div className="card">
+                                <h3>Новое упражнение</h3>
+                                <div style={{marginBottom: '16px'}}>
+                                    <input
+                                        type="text"
+                                        placeholder="Название упражнения"
+                                        value={newExercise.name}
+                                        onChange={(e) => setNewExercise({...newExercise, name: e.target.value})}
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px',
+                                            border: '1px solid #d1d5db',
+                                            borderRadius: '8px',
+                                            fontSize: '16px',
+                                            marginBottom: '12px'
+                                        }}
+                                    />
+                                    <select
+                                        value={newExercise.category}
+                                        onChange={(e) => setNewExercise({...newExercise, category: e.target.value})}
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px',
+                                            border: '1px solid #d1d5db',
+                                            borderRadius: '8px',
+                                            fontSize: '16px',
+                                            marginBottom: '12px'
+                                        }}
+                                    >
+                                        <option value="грудь">Грудь</option>
+                                        <option value="ноги">Ноги</option>
+                                        <option value="спина">Спина</option>
+                                        <option value="плечи">Плечи</option>
+                                        <option value="руки">Руки</option>
+                                        <option value="пресс">Пресс</option>
+                                    </select>
+                                </div>
+                                <div style={{display: 'flex', gap: '8px'}}>
+                                    <button 
+                                        className="button"
+                                        style={{background: '#10b981'}}
+                                        onClick={addExercise}
+                                        disabled={addingExercise}
+                                    >
+                                        {addingExercise ? 'Добавление...' : 'Добавить'}
+                                    </button>
+                                    <button 
+                                        className="button"
+                                        style={{background: '#6b7280'}}
+                                        onClick={() => {
+                                            setShowAddForm(false);
+                                            setNewExercise({ name: '', category: 'грудь' });
+                                        }}
+                                    >
+                                        Отмена
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                         
                         {loading ? (
                             <div className="loading">Загрузка упражнений...</div>
