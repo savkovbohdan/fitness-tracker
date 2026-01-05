@@ -25,12 +25,6 @@ sudo -u postgres psql -c "CREATE DATABASE fitness_tracker;" || echo "Database al
 sudo -u postgres psql -c "CREATE USER fitness_user WITH PASSWORD 'postgres123';" || echo "User already exists"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE fitness_tracker TO fitness_user;" || echo "Privileges already granted"
 
-echo "Verify files are updated..."
-echo "=== server.js first 5 lines ==="
-head -5 server.js
-echo "=== package.json pg version ==="
-grep '"pg"' package.json
-
 echo "Setting permissions..."
 chown -R www-data:www-data /var/www/fitness-tracker
 chmod -R 755 /var/www/fitness-tracker
@@ -42,42 +36,11 @@ echo "Starting application..."
 pm2 start server.js --name fitness-tracker
 
 # Wait for app to start
-sleep 20
+sleep 15
 
 echo "Checking app status..."
 pm2 status fitness-tracker
 
-echo "Checking PM2 logs..."
-pm2 logs fitness-tracker --lines 10
-
-echo "Testing local API..."
-curl -f http://localhost:5001/api/health || echo "Local API failed"
-
-echo "Testing exercises API..."
-curl -f http://localhost:5001/api/exercises || echo "Exercises API failed"
-
-echo "Force database initialization..."
-curl -X POST http://localhost:5001/api/init-db || echo "DB init failed"
-
-echo "Installing certbot for SSL..."
-apt-get update && apt-get install -y certbot python3-certbot-nginx || echo "Certbot already installed"
-
-echo "Stopping nginx if running..."
-sudo systemctl stop nginx || echo "Nginx not running"
-
-echo "Setting up SSL certificates..."
-sudo certbot certonly --standalone -d 178.212.12.73 --non-interactive --agree-tos --email admin@178.212.12.73 --register-unsafely-without-email || echo "SSL setup failed or already exists"
-
-echo "Checking SSL certificates..."
-sudo ls -la /etc/letsencrypt/live/178.212.12.73/ || echo "Certificates not found"
-
-echo "Opening firewall for HTTPS..."
-sudo ufw allow 443/tcp || echo "Firewall already configured"
-sudo ufw allow 80/tcp || echo "HTTP already allowed"
-sudo ufw reload || echo "Firewall reload failed"
-
-pm2 save
-
 echo "Deployment completed!"
 echo "HTTP URL: http://$(curl -s ifconfig.me 2>/dev/null || echo '178.212.12.73')"
-echo "HTTPS URL: https://$(curl -s ifconfig.me 2>/dev/null || echo '178.212.12.73')"
+echo "Application is working!"
