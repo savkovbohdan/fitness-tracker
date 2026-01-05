@@ -36,7 +36,6 @@ jobs:
         port: 22
         source: "."
         target: "/var/www/fitness-tracker"
-        strip_components: 1
         overwrite: true
         exclude: ".git,node_modules"
 
