@@ -1,6 +1,5 @@
-import os
 import logging
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 # Настройка логирования
@@ -16,7 +15,7 @@ TELEGRAM_BOT_TOKEN = "8386581272:AAEL5k6Kxx1ZDN2jeoONNRbe1NKdPwEZe8M"
 MINI_APP_URL = "http://178.212.12.73"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик команды /start - запускает Mini App"""
+    """Обработчик команды /start"""
     user = update.effective_user
     
     logger.info(f"User {user.first_name} (@{user.username}) started bot")
@@ -27,19 +26,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 🚀 Нажми кнопку ниже чтобы открыть приложение:
     """
     
-    # Создаем WebAppInfo для Mini App
-    web_app_info = WebAppInfo(
-        url=MINI_APP_URL,
-        title="🏋️‍♂️ Фитнес-Трекер",
-        description="Открыть фитнес-приложение",
-        text="Открыть приложение"
-    )
-    
-    # Создаем клавиатуру с кнопкой Mini App
+    # Простая кнопка-ссылка
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
             text="🚀 Открыть Фитнес-Трекер",
-            web_app=web_app_info
+            url=MINI_APP_URL
         )]
     ])
     
@@ -51,15 +42,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.info(f"Welcome message sent to user {user.id}")
     except Exception as e:
         logger.error(f"Error sending message: {e}")
-        await update.message.reply_text(
-            "🏋️‍♂️ Фитнес-Трекер\n\n"
-            "Нажми кнопку ниже:",
-            reply_markup=keyboard
-        )
 
 def main():
     """Основная функция запуска бота"""
-    logger.info("Starting Mini App Bot...")
+    logger.info("Starting Test Bot...")
     logger.info(f"Mini App URL: {MINI_APP_URL}")
     
     try:
@@ -77,6 +63,7 @@ def main():
         
     except Exception as e:
         logger.error(f"Error starting bot: {e}")
+        print(f"ERROR: {e}")
         exit(1)
 
 if __name__ == '__main__':

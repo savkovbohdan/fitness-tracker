@@ -16,7 +16,7 @@ TELEGRAM_BOT_TOKEN = "8386581272:AAEL5k6Kxx1ZDN2jeoONNRbe1NKdPwEZe8M"
 MINI_APP_URL = "http://178.212.12.73"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик команды /start - запускает Mini App"""
+    """Обработчик команды /start - запускает Mini App внутри Telegram"""
     user = update.effective_user
     
     logger.info(f"User {user.first_name} (@{user.username}) started bot")
@@ -24,42 +24,47 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = f"""
 🏋️‍♂️ Добро пожаловать в Фитнес-Трекер, {user.first_name}!
 
-🚀 Нажми кнопку ниже чтобы открыть приложение:
+📱 Это Telegram Mini App версия фитнес-трекера!
+
+🚀 Нажми кнопку ниже чтобы открыть приложение прямо в Telegram:
     """
     
-    # Создаем WebAppInfo для Mini App
-    web_app_info = WebAppInfo(
-        url=MINI_APP_URL,
-        title="🏋️‍♂️ Фитнес-Трекер",
-        description="Открыть фитнес-приложение",
-        text="Открыть приложение"
-    )
-    
-    # Создаем клавиатуру с кнопкой Mini App
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton(
-            text="🚀 Открыть Фитнес-Трекер",
-            web_app=web_app_info
-        )]
-    ])
-    
     try:
+        # Создаем WebAppInfo для Mini App
+        web_app_info = WebAppInfo(url=MINI_APP_URL)
+        
+        # Создаем клавиатуру с Web App кнопкой
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton(
+                text="🚀 Открыть Фитнес-Трекер",
+                web_app=web_app_info
+            )]
+        ])
+        
         await update.message.reply_text(
             welcome_text,
             reply_markup=keyboard
         )
         logger.info(f"Welcome message sent to user {user.id}")
+        
     except Exception as e:
-        logger.error(f"Error sending message: {e}")
+        logger.error(f"Error with WebApp: {e}")
+        # Fallback с обычной ссылкой
+        fallback_keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton(
+                text="🚀 Открыть Фитнес-Трекер",
+                url=MINI_APP_URL
+            )]
+        ])
         await update.message.reply_text(
-            "🏋️‍♂️ Фитнес-Трекер\n\n"
-            "Нажми кнопку ниже:",
-            reply_markup=keyboard
+            f"🏋️‍♂️ Фитнес-Трекер\n\n"
+            f"🚀 Открой приложение: {MINI_APP_URL}",
+            reply_markup=fallback_keyboard
         )
 
 def main():
     """Основная функция запуска бота"""
-    logger.info("Starting Mini App Bot...")
+    logger.info("Starting Mini App Bot with WebApp support...")
     logger.info(f"Mini App URL: {MINI_APP_URL}")
     
     try:

@@ -33,7 +33,7 @@ EOF
 # Server.js
 cat > server.js << 'EOF'
 const express = require('express');
-const { Pool } = require('pg');
+const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');

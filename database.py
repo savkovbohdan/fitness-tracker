@@ -126,7 +126,7 @@ class Database:
             )
             conn.commit()
             return cursor.lastrowid
-        except psycopg2.IntegrityError:
+        except sqlite3.IntegrityError:
             return None  # Упражнение с таким названием уже существует
         finally:
             conn.close()

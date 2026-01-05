@@ -1,6 +1,6 @@
 import os
 import logging
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 # Настройка логирования
@@ -24,37 +24,32 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = f"""
 🏋️‍♂️ Добро пожаловать в Фитнес-Трекер, {user.first_name}!
 
-🚀 Нажми кнопку ниже чтобы открыть приложение:
+🚀 Открой приложение по ссылке:
+{MINI_APP_URL}
+
+Или используй кнопку ниже:
     """
     
-    # Создаем WebAppInfo для Mini App
-    web_app_info = WebAppInfo(
-        url=MINI_APP_URL,
-        title="🏋️‍♂️ Фитнес-Трекер",
-        description="Открыть фитнес-приложение",
-        text="Открыть приложение"
-    )
-    
-    # Создаем клавиатуру с кнопкой Mini App
+    # Создаем клавиатуру с обычной кнопкой-ссылкой
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
             text="🚀 Открыть Фитнес-Трекер",
-            web_app=web_app_info
+            url=MINI_APP_URL
         )]
     ])
     
     try:
         await update.message.reply_text(
             welcome_text,
-            reply_markup=keyboard
+            reply_markup=keyboard,
+            disable_web_page_preview=True
         )
         logger.info(f"Welcome message sent to user {user.id}")
     except Exception as e:
         logger.error(f"Error sending message: {e}")
         await update.message.reply_text(
-            "🏋️‍♂️ Фитнес-Трекер\n\n"
-            "Нажми кнопку ниже:",
-            reply_markup=keyboard
+            f"🏋️‍♂️ Фитнес-Трекер\n\n"
+            f"🚀 Открой приложение: {MINI_APP_URL}"
         )
 
 def main():

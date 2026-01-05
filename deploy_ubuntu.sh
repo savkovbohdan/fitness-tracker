@@ -47,7 +47,7 @@ if [ ! -f package.json ]; then
   },
   "dependencies": {
     "express": "^4.18.2",
-    "pg": "^8.11.3",
+    "sqlite3": "^5.1.6",
     "cors": "^2.8.5",
     "body-parser": "^1.20.2",
     "dotenv": "^16.3.1"
