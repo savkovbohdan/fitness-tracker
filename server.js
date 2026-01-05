@@ -60,7 +60,10 @@ async function initializeDatabase() {
 
     // Check if exercises exist
     const exercisesResult = await pool.query('SELECT COUNT(*) as count FROM exercises');
+    console.log('Exercises count:', exercisesResult.rows[0].count);
+    
     if (exercisesResult.rows[0].count === 0) {
+      console.log('Creating base exercises...');
       const exercises = [
         ['Жим лежа', 'грудь'], ['Приседания со штангой', 'ноги'],
         ['Становая тяга', 'спина'], ['Подтягивания', 'спина'],
@@ -70,9 +73,12 @@ async function initializeDatabase() {
       ];
 
       for (const [name, category] of exercises) {
+        console.log(`Adding exercise: ${name} (${category})`);
         await pool.query('INSERT INTO exercises (name, category, is_custom) VALUES ($1, $2, 0)', [name, category]);
       }
       console.log('✅ Базовые упражнения добавлены');
+    } else {
+      console.log('✅ Упражнения уже существуют в базе данных');
     }
 
     // Add test user
@@ -97,8 +103,19 @@ app.get('/api/health', (req, res) => {
 
 app.post('/api/init-db', async (req, res) => {
   try {
+    console.log('Force initializing database...');
     await initializeDatabase();
-    res.json({status: 'ok', message: 'Database initialized successfully'});
+    console.log('Database initialization completed');
+    
+    // Check exercises count
+    const exercisesResult = await pool.query('SELECT COUNT(*) as count FROM exercises');
+    console.log('Total exercises after init:', exercisesResult.rows[0].count);
+    
+    res.json({
+      status: 'ok', 
+      message: 'Database initialized successfully',
+      exercises_count: exercisesResult.rows[0].count
+    });
   } catch (err) {
     console.error('Database init error:', err);
     res.status(500).json({error: err.message});
