@@ -11,7 +11,7 @@ echo "Installing dependencies..."
 npm install --production
 
 echo "Installing Python dependencies..."
-pip3 install --break-system-packages python-telegram-bot==13.15 python-dotenv==1.0.0 || echo "Python requirements already installed"
+pip3 install --break-system-packages python-telegram-bot==20.7 python-dotenv==1.0.0 || echo "Python requirements already installed"
 
 echo "Setting up environment variables..."
 cat > .env << EOF
