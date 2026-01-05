@@ -173,8 +173,13 @@
                     try {
                         const response = await axios.post('/api/exercises', newExercise);
                         setSuccess(`Упражнение "${newExercise.name}" добавлено!`);
-                        setNewExercise({ name: '', category: 'грудь', photo_url: '' });
-                        setShowAddForm(false);
+                        
+                        // Не очищаем форму сразу, даем пользователю увидеть успех
+                        setTimeout(() => {
+                            setNewExercise({ name: '', category: 'грудь', photo_url: '' });
+                            setShowAddForm(false);
+                        }, 2000); // Очищаем через 2 секунды
+                        
                         loadExercises(); // Reload exercises
                     } catch (err) {
                         setError(err.response?.data?.error || 'Ошибка при добавлении упражнения');
