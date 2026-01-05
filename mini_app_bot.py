@@ -2,7 +2,8 @@ import os
 import logging
 import asyncio
 from datetime import datetime
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+import telegram
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 from dotenv import load_dotenv
 
@@ -74,7 +75,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     
     # Создаем WebAppInfo для Mini App
-    web_app_info = WebAppInfo(
+    web_app_info = telegram.WebAppInfo(
         url=MINI_APP_URL,
         title="🏋️‍♂️ Фитнес-Трекер",
         description="Полнофункциональное приложение для отслеживания тренировок",
@@ -163,7 +164,7 @@ async def stats_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
             text="🚀 Открыть Фитнес-Трекер",
-            web_app=WebAppInfo(
+            web_app=telegram.WebAppInfo(
                 url=MINI_APP_URL,
                 title="🏋️‍♂️ Фитнес-Трекер",
                 description="Открыть приложение",
@@ -228,7 +229,7 @@ async def history_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
             text="🚀 Открыть Фитнес-Трекер",
-            web_app=WebAppInfo(
+            web_app=telegram.WebAppInfo(
                 url=MINI_APP_URL,
                 title="🏋️‍♂️ Фитнес-Трекер",
                 description="Открыть приложение",
@@ -302,7 +303,7 @@ async def exercises_callback(update: Update, context: ContextTypes.DEFAULT_TYPE)
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
             text="🚀 Открыть Фитнес-Трекер",
-            web_app=WebAppInfo(
+            web_app=telegram.WebAppInfo(
                 url=MINI_APP_URL,
                 title="🏋️‍♂️ Фитнес-Трекер",
                 description="Открыть приложение",
@@ -392,7 +393,7 @@ async def help_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
             text="🚀 Открыть Фитнес-Трекер",
-            web_app=WebAppInfo(
+            web_app=telegram.WebAppInfo(
                 url=MINI_APP_URL,
                 title="🏋️‍♂️ Фитнес-Трекер",
                 description="Открыть приложение",
@@ -496,7 +497,7 @@ async def add_exercise_callback(update: Update, context: ContextTypes.DEFAULT_TY
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
             text="🚀 Открыть Фитнес-Трекер",
-            web_app=WebAppInfo(
+            web_app=telegram.WebAppInfo(
                 url=MINI_APP_URL,
                 title="🏋️‍♂️ Фитнес-Трекер",
                 description="Открыть приложение",
@@ -559,7 +560,7 @@ async def back_to_menu_callback(update: Update, context: ContextTypes.DEFAULT_TY
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
             text="🚀 Открыть Фитнес-Трекер",
-            web_app=WebAppInfo(
+            web_app=telegram.WebAppInfo(
                 url=MINI_APP_URL,
                 title="🏋️‍♂️ Фитнес-Трекер",
                 description="Полнофункциональное приложение",
@@ -618,7 +619,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton(
                     text="🚀 Открыть Фитнес-Трекер",
-                    web_app=WebAppInfo(
+                    web_app=telegram.WebAppInfo(
                         url=MINI_APP_URL,
                         title="🏋️‍♂️ Фитнес-Трекер",
                         description="Открыть приложение",
@@ -647,7 +648,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton(
                     text="🚀 Открыть Фитнес-Трекер",
-                    web_app=WebAppInfo(
+                    web_app=telegram.WebAppInfo(
                         url=MINI_APP_URL,
                         title="🏋️‍♂️ Фитнес-Трекер",
                         description="Открыть приложение",
