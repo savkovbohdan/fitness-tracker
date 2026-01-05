@@ -52,9 +52,27 @@ pm2 stop mini-app-bot || echo "Python bot not running"
 pm2 delete mini-app-bot || echo "Python bot not found"
 
 # Check Python syntax first
+echo "Checking Python syntax..."
 python3 -c "import mini_app_bot" || echo "Python syntax error in mini_app_bot.py"
 
+# Check if python3 exists
+echo "Checking Python installation..."
+which python3 || echo "python3 not found"
+python3 --version || echo "Cannot get python3 version"
+
+# Check if file exists
+echo "Checking mini_app_bot.py file..."
+ls -la mini_app_bot.py || echo "mini_app_bot.py not found"
+
+# Try to run Python bot directly to see errors
+echo "Testing Python bot directly..."
+TELEGRAM_BOT_TOKEN=8386581272:AAEL5k6Kxx1ZDN2jeoONNRbe1NKdPwEZe8M WEBAPP_URL=http://178.212.12.73 python3 mini_app_bot.py &
+PYTHON_PID=$!
+sleep 3
+kill $PYTHON_PID 2>/dev/null || echo "Python process already stopped"
+
 # Start bot with full path and environment
+echo "Starting Python Mini App Bot with PM2..."
 pm2 start mini_app_bot.py --name mini-app-bot --interpreter /usr/bin/python3 --env TELEGRAM_BOT_TOKEN=8386581272:AAEL5k6Kxx1ZDN2jeoONNRbe1NKdPwEZe8M --env WEBAPP_URL=http://178.212.12.73
 
 # Wait for python bot to start
