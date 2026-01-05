@@ -4,11 +4,6 @@
 set -e
 cd /var/www/fitness-tracker
 
-echo "Force cleanup old files..."
-pm2 stop fitness-tracker || true
-pm2 delete fitness-tracker || true
-rm -rf * .* || true
-
 echo "Installing PostgreSQL client..."
 apt-get update && apt-get install -y postgresql postgresql-contrib
 
