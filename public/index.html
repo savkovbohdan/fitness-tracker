@@ -569,10 +569,43 @@
                                     {day.exercises.map(exercise => (
                                         <div key={exercise.name} style={{padding: '12px', marginBottom: '8px', backgroundColor: '#f9fafb', borderRadius: '8px'}}>
                                             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
-                                                <div>
-                                                    <div style={{fontWeight: 'bold', fontSize: '16px'}}>{exercise.name}</div>
-                                                    <div style={{fontSize: '12px', color: '#6b7280'}}>
-                                                        <span className="category">{exercise.category}</span>
+                                                <div style={{display: 'flex', alignItems: 'center', flex: 1}}>
+                                                    {exercise.photo_url && (
+                                                        <img 
+                                                            src={exercise.photo_url} 
+                                                            alt={exercise.name}
+                                                            style={{
+                                                                width: '40px',
+                                                                height: '40px',
+                                                                objectFit: 'cover',
+                                                                borderRadius: '6px',
+                                                                marginRight: '12px',
+                                                                border: '1px solid #e5e7eb'
+                                                            }}
+                                                        />
+                                                    )}
+                                                    {!exercise.photo_url && (
+                                                        <div style={{
+                                                            width: '40px',
+                                                            height: '40px',
+                                                            borderRadius: '6px',
+                                                            marginRight: '12px',
+                                                            backgroundColor: '#f3f4f6',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            fontSize: '18px',
+                                                            color: '#9ca3af',
+                                                            border: '1px solid #e5e7eb'
+                                                        }}>
+                                                            💪
+                                                        </div>
+                                                    )}
+                                                    <div style={{flex: 1}}>
+                                                        <div style={{fontWeight: 'bold', fontSize: '16px'}}>{exercise.name}</div>
+                                                        <div style={{fontSize: '12px', color: '#6b7280'}}>
+                                                            <span className="category">{exercise.category}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div style={{textAlign: 'right'}}>
