@@ -42,9 +42,16 @@ bot.on('callback_query', (query) => {
 
 // Команды бота
 bot.onText(/\/start/, async (msg) => {
-  console.log('📨 Received /start command from:', msg.chat.id);
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] 📨 RECEIVED /start COMMAND`);
+  console.log(`[${timestamp}] 👤 User: ${msg.from.first_name} (@${msg.from.username || 'no_username'})`);
+  console.log(`[${timestamp}] 💬 Chat ID: ${msg.chat.id}`);
+  console.log(`[${timestamp}] 📱 Message: "${msg.text}"`);
+  
   const chatId = msg.chat.id;
   const firstName = msg.from.first_name;
+  
+  console.log(`[${timestamp}] 🔄 Processing /start command for chat ${chatId}`);
   
   const welcomeMessage = `
 🏋️‍♂️ Добро пожаловать в Фитнес-Трекер, ${firstName}!
@@ -62,6 +69,8 @@ bot.onText(/\/start/, async (msg) => {
   `;
   
   try {
+    console.log(`[${timestamp}] 📤 Sending welcome message to chat ${chatId}`);
+    
     await bot.sendMessage(chatId, welcomeMessage, {
       parse_mode: 'Markdown',
       reply_markup: {
@@ -80,9 +89,14 @@ bot.onText(/\/start/, async (msg) => {
         ]
       }
     });
-    console.log('✅ /start command sent successfully to:', chatId);
+    
+    console.log(`[${timestamp}] ✅ /start command sent successfully to chat ${chatId}`);
+    console.log(`[${timestamp}] 📋 Message length: ${welcomeMessage.length} characters`);
+    console.log(`[${timestamp}] 🎯 Reply markup: 3 rows with inline buttons`);
+    
   } catch (error) {
-    console.error('❌ Error sending /start message:', error.message);
+    console.log(`[${timestamp}] ❌ ERROR sending /start message: ${error.message}`);
+    console.log(`[${timestamp}] 🐛 Error details:`, error);
   }
 });
 
